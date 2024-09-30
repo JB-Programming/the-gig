@@ -14,6 +14,9 @@ To complete this issue one must create a [...] close to this example.
 **User Access:**
 [Who_is_allowed_to_access_the_page]
 
+**User_Context:**
+[Info?]
+
 **Actions the user can take:**
 
 - [ ] 
