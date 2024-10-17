@@ -29,8 +29,10 @@ const DashboardPage = ({ setIsLoggedIn }) => {
       <h1>Dashboard</h1>
       {userData && (
         <div>
-          <p>Welcome, {userData.username}!</p>
+          <p>Welcome, {userData.username}</p>
           <p>Email: {userData.email}</p>
+          <p>First Name: {userData.first_name}</p>
+          <p>Last Name: {userData.last_name}</p>
         </div>
       )}
       <button onClick={handleLogout}>Logout</button>
