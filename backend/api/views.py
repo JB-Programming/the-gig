@@ -1,24 +1,28 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.contrib.auth import authenticate, login
-from django.http import JsonResponse
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
-import json
 
+@api_view(['POST'])
 @csrf_exempt
-def login_view(request):
-    if request.method == "POST":
-        body = json.loads(request.body)
-        username = body.get('username')
-        password = body.get('password')
-        #user = authenticate(username=username, password=password)
-        #if user is not None:
-        if username == "abc" and password == "123":
-            #login(request, user)
-            return JsonResponse({"message": "Login successful"}, status=200)
-        else:
-            return JsonResponse({"error": "Invalid credentials"}, status=400)
+def login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    user = authenticate(username=username, password=password)
+    if user:
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({'success': True, 'token': token.key})
+    return Response({'success': False}, status=status.HTTP_401_UNAUTHORIZED)
 
-    return JsonResponse({"error": "Invalid request method"}, status=400)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_data(request):
+    return Response({
+        'username': request.user.username,
+        'email': request.user.email,
+    })
+
 
