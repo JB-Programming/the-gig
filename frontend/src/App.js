@@ -1,25 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Navigate, Routes } from 'react-router-dom';
+import LoginPage from './LoginPage';
+import DashboardPage from './DashboardPage';
 
-function App() {
-    const [message, setMessage] = useState('');
+const App = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    useEffect(() => {
-        // Fetch data from the Django API
-        axios.get('http://localhost:8000/api/hello/')
-            .then(response => {
-                setMessage(response.data.message);
-            })
-            .catch(error => {
-                console.error("There was an error fetching the data!", error);
-            });
-    }, []);
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
-    return (
-        <div className="App">
-            <h1>{message}</h1>
-        </div>
-    );
-}
+  return (
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            isLoggedIn ? (
+              <Navigate to="/dashboard" />
+            ) : (
+              <LoginPage setIsLoggedIn={setIsLoggedIn} />
+            )
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            isLoggedIn ? (
+              <DashboardPage setIsLoggedIn={setIsLoggedIn} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+      </Routes>
+    </Router>
+  );
+};
 
 export default App;
