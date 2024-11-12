@@ -5,6 +5,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
+from django.apps import apps
+from django.db import DatabaseError
+from django.db import connection
 
 @api_view(['POST'])
 @csrf_exempt
@@ -107,4 +111,44 @@ def build_tree_with_null(request):
         #print(node)
     #return JsonResponse(build_tree(data))
     return JsonResponse(list(data), safe=False)
+
+
+class TeamListView(APIView):
+    def get(self, request):
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT bezeichnung 
+                    FROM team_stammdaten 
+                    ORDER BY bezeichnung
+                """)
+                teams = [row[0] for row in cursor.fetchall()]
+            
+            return Response({'teams': teams})
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to fetch teams: {str(e)}'}, 
+                status=500
+            )
+
+class EmployeeListView(APIView):
+    def get(self, request):
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT vorname, nachname 
+                    FROM mitarbeiter_stammdaten 
+                    ORDER BY nachname, vorname
+                """)
+                employees = [
+                    {'vorname': row[0], 'nachname': row[1]} 
+                    for row in cursor.fetchall()
+                ]
+            
+            return Response({'employees': employees})
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to fetch employees: {str(e)}'}, 
+                status=500
+            )
 
