@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Navigate, Routes } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import DashboardPage from './DashboardPage';
+import TreeView from './TreeView';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -35,6 +37,11 @@ const App = () => {
               <Navigate to="/" />
             )
           }
+        />
+      
+      <Route
+          path="/treeview"
+          element={<TreeView/>}
         />
       </Routes>
     </Router>
