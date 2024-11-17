@@ -28,11 +28,14 @@ const DashboardPage = ({ setIsLoggedIn }) => {
       try {
         const response = await axios.get('http://localhost:8000/api/structure/');
         const data = response.data;
-        
+        console.log(data);
         const uniqueEntries = new Map();
         
         data.forEach(item => {
           // Create composite key from all relevant IDs
+          console.log(typeof item.parent)
+          console.log(item.parent)
+
           const idKey = [
             `p${item.primär_id}`,
             `o${item.ordner_id}`,
@@ -55,7 +58,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
             });
           }
         });
-  
+        console.log([...uniqueEntries.values()])
         setEntities([...uniqueEntries.values()]);
         setTreeData(data);
         setLoading(false);
@@ -77,11 +80,17 @@ const DashboardPage = ({ setIsLoggedIn }) => {
 
     setSelectedEntity(entity);
 
-    // Get the parent IDs from a set of objects 
+    /*/ Get the parent IDs from a set of objects 
     const getParentIds = (items) => {
+      items.map(item => console.log(item.parent))
       return items.map(item => item.parent); // [14, 26, 27, 3]
+      
+    };*/
+    const getParentIds = (items) => {
+      console.log(items[0].parent)
+      return items[0].parent ? items[0].parent : []; // [14, 26, 27, 3]
+      
     };
-
     switch(entity.type) {
       case 'Team':
         // Find all items with matching team_id
@@ -93,7 +102,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
           item.team_id === entity.type_id 
           //item.team_id !== null 
         );
-
+        console.log(preCheckedItems);
         parentIds = getParentIds(preCheckedItems);
 
         break;
@@ -164,23 +173,46 @@ const DashboardPage = ({ setIsLoggedIn }) => {
     setSelectedItems(transformedItems);
   };
 
-  const handleCheckbox = (item, index, entity) => {
+  const handleCheckbox = async (item, index, entity) => {
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: { 
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  
     const isChecked = checkedItems[index];
     
-    if (isChecked) {
-      // Checkbox is being unchecked
-      console.log('Deselected item:', item.id, item.type_id, entity);
-      // Add your deselect action here
-    } else {
-      // Checkbox is being checked
-      console.log('Selected item:', item.id, item.type_id, entity);
-      // Add your select action here
-    }
+    try {
+      if (isChecked) {
+        console.log(item);
+        console.log(selectedItems)
+        console.log('delete', entity.id, item.id);
+
+      } else {
+        console.log('create', entity, item.id)
+      } 
+      console.log(isChecked ? 'delete' : 'create', entity, item.id)
+      const response = await axios.post('http://localhost:8000/api/relation/', {
+        action: isChecked ? 'delete' : 'create',
+        entity: entity,
+        parent: item.id
+      }, config);
   
-    setCheckedItems(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
+      if (response.data.success) {
+        setCheckedItems(prev => ({
+          ...prev,
+          [index]: !prev[index]
+        }));
+        /*
+      } else {
+        console.error('Operation failed:', response.data.error);
+      }*/
+      }
+    } catch (error) {
+      console.error('Error managing structure:', error.response?.data?.error || error.message);
+    }
   };
   
 
