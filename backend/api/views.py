@@ -9,6 +9,8 @@ from rest_framework.views import APIView
 from django.apps import apps
 from django.db import DatabaseError
 from django.db import connection
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 
 @api_view(['POST'])
 @csrf_exempt
@@ -24,11 +26,17 @@ def login(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_data(request):
+    user = request.user
     return Response({
-        'username': request.user.username,
-        'email': request.user.email,
-        'first_name': request.user.first_name,
-        'last_name': request.user.last_name,
+        'username': user.username,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'is_superuser': user.is_superuser,
+        'is_staff': user.is_staff,
+        'id': user.id,
+        'groups': list(user.groups.values_list('name', flat=True)),
+        'permissions': list(user.get_all_permissions()),
     })
 
 #from .models import Struktur
@@ -151,4 +159,50 @@ class EmployeeListView(APIView):
                 {'error': f'Failed to fetch employees: {str(e)}'}, 
                 status=500
             )
+
+class UserInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        User = get_user_model()
+        user = User.objects.get(id=request.user.id)  # Get fresh user object
+        
+        # Debug print
+        print(f"""
+        User Details:
+        ID: {user.id}
+        Username: {user.username}
+        Is Superuser: {user.is_superuser}
+        Is Staff: {user.is_staff}
+        """)
+        
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser,
+            'email': user.email,
+        })
+
+class UserRolesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        User = get_user_model()
+        user = User.objects.select_related().get(id=request.user.id)
+        
+        # Get all user's groups and permissions
+        user_data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'is_superuser': user.is_superuser,
+            'is_staff': user.is_staff,
+            'groups': list(user.groups.values_list('name', flat=True)),
+            'permissions': list(user.get_all_permissions()),
+        }
+        
+        print("Backend User Data:", user_data)  # Debug print
+        
+        return Response(user_data)
 

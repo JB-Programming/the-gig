@@ -15,7 +15,14 @@ import PersonIcon from '@mui/icons-material/Person';
 import FolderIcon from '@mui/icons-material/Folder';
 import axios from 'axios';
 
-const DashboardTree = () => {
+const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId }) => {
+  console.log('User Access:', {
+    isAdmin,
+    isSuperuser,
+    userId,
+    hasFullAccess: isAdmin || isSuperuser
+  });
+
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,6 +31,8 @@ const DashboardTree = () => {
     admin: false,
     persons: false,
   });
+
+  const hasFullAccess = isAdmin || isSuperuser;
 
   useEffect(() => {
     fetchEmployees();
@@ -38,7 +47,8 @@ const DashboardTree = () => {
           'Content-Type': 'application/json',
         }
       });
-      setEmployees(response.data.employees);
+      const employeeData = response.data.employees;
+      setEmployees(hasFullAccess ? employeeData : employeeData.filter(emp => emp.id === userId));
       setLoading(false);
     } catch (err) {
       console.error('Error details:', err);
@@ -104,16 +114,7 @@ const DashboardTree = () => {
       }}
     >
       <Box sx={{ p: 0.5 }}>
-        <List 
-          component="nav" 
-          sx={{ 
-            p: 0,
-            '& .MuiCollapse-root': {
-              my: 0
-            }
-          }}
-        >
-          {/* Root */}
+        <List component="nav" sx={{ p: 0 }}>
           <ListItemStyled
             icon={<FolderIcon color="primary" />}
             primary="Hillmann & Geitz"
@@ -123,33 +124,33 @@ const DashboardTree = () => {
 
           <Collapse in={open.root} timeout="auto">
             <List component="div" disablePadding>
-              {/* Monatspflege */}
-              <ListItemStyled
-                depth={1}
-                icon={<FolderIcon />}
-                primary="Monatspflege"
-              />
-
-              {/* Administrator */}
-              <ListItemStyled
-                depth={1}
-                icon={<FolderIcon />}
-                primary="Administrator"
-                onClick={() => handleClick('admin')}
-                isExpandable
-              />
-
-              <Collapse in={open.admin} timeout="auto">
-                <List component="div" disablePadding>
+              {hasFullAccess && (
+                <>
                   <ListItemStyled
-                    depth={2}
-                    icon={<PersonIcon />}
-                    primary="Heiko"
+                    depth={1}
+                    icon={<FolderIcon />}
+                    primary="Monatspflege"
                   />
-                </List>
-              </Collapse>
+                  <ListItemStyled
+                    depth={1}
+                    icon={<FolderIcon />}
+                    primary="Administrator"
+                    onClick={() => handleClick('admin')}
+                    isExpandable
+                  />
 
-              {/* Personen */}
+                  <Collapse in={open.admin} timeout="auto">
+                    <List component="div" disablePadding>
+                      <ListItemStyled
+                        depth={2}
+                        icon={<PersonIcon />}
+                        primary="Heiko"
+                      />
+                    </List>
+                  </Collapse>
+                </>
+              )}
+              
               <ListItemStyled
                 depth={1}
                 icon={<FolderIcon />}

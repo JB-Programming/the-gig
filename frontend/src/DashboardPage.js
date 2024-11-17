@@ -13,6 +13,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         const response = await axios.get('http://localhost:8000/api/user/', {
           headers: { Authorization: `Token ${localStorage.getItem('token')}` },
         });
+        console.log('User Data:', response.data);
         setUserData(response.data);
       } catch (error) {
         console.error('Failed to fetch user data:', error);
@@ -27,16 +28,12 @@ const DashboardPage = ({ setIsLoggedIn }) => {
     setIsLoggedIn(false);
   };
 
+  const userRole = userData?.is_superuser ? 'Superuser' : 
+                  userData?.is_staff ? 'Administrator' : 'User';
+
   return (
-   
-<Box 
-sx={{ 
-  display: 'flex',
-  minHeight: '100vh',
-}}
->
-{/* Left Side Container */}
-<Box 
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      <Box 
         sx={{ 
           width: '280px',
           position: 'fixed',
@@ -45,20 +42,19 @@ sx={{
           bottom: 0,
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between', // This pushes the account box to the bottom
+          justifyContent: 'space-between',
           borderRight: '1px solid #e0e0e0',
         }}
       >
-        {/* Tree Container */}
-        <Box 
-          sx={{ 
-            overflowY: 'auto',
-            flexGrow: 1,
-            p: 1,
-          }}
-        >
-          <DashboardTree />
+        <Box sx={{ overflowY: 'auto', flexGrow: 1, p: 1 }}>
+          <DashboardTree 
+            isAdmin={userData?.is_staff}
+            isSuperuser={userData?.is_superuser}
+            userId={userData?.id}
+          />
         </Box>
+
+       
 
         {/* Account Info Box */}
         <Paper
@@ -78,29 +74,43 @@ sx={{
           </Avatar>
           <Box>
             {userData && (
-              <div>
-                <p>Email: {userData.email}</p>
-                <p>{userData.first_name} {userData.last_name} </p>
-                <button onClick={handleLogout}>Logout</button>
-              </div>
+              <Box>
+                <Typography sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
+                  {userData.first_name} {userData.last_name}
+                </Typography>
+                <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
+                  {userRole}
+                </Typography>
+                <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary' }}>
+                  {userData.email}
+                </Typography>
+                <button 
+                  onClick={handleLogout}
+                  style={{
+                    marginTop: '8px',
+                    padding: '4px 8px',
+                    fontSize: '0.7rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Logout
+                </button>
+              </Box>
             )}
           </Box>
         </Paper>
       </Box>
 
-{/* Main Content Area */}
-<Box 
-  sx={{ 
-    flexGrow: 1,
-    ml: '400px', // Match the width of the tree container
-    p: 3,
-  }}
->
-  <h1>Dashboard</h1>
-  
-  {/* Add your main dashboard content here */}
-</Box>
-</Box>
+      <Box 
+        sx={{ 
+          flexGrow: 1,
+          ml: '280px',
+          p: 3,
+        }}
+      >
+        <h1>Dashboard</h1>
+      </Box>
+    </Box>
   );
 };
 
