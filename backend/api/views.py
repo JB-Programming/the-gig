@@ -69,41 +69,51 @@ class RelationRateThrottle(UserRateThrottle):
     rate = '100/hour'
 
 @api_view(['POST'])
-#@permission_classes([IsAdminUser])
+# @permission_classes([IsAuthenticated])
 # @throttle_classes([RelationRateThrottle])
 def manage_relation(request):
+    #if request.user.is_superuser:
     with transaction.atomic():
         action = request.data.get('action')
         entity = request.data.get('entity')
         parent = request.data.get('parent')
+        x = request.user.is_superuser
 
+        print(f"User ID: {x}")
         print(f"Action: {action}, Entity: {entity}, Parent: {parent}")
 
-        return Response({'success': True})
-        """
+        struktur = Struktur.objects.get(struktur_id=entity['id'])
+        print(f"struktur: {struktur.parent}")
         
-        if not all([isinstance(id, int) and id > 0 for id in [parent, entity.type_id, entity.id]]):
+        
+        if not all([isinstance(id, int) and id > 0 for id in [parent, entity['type_id'], entity['id']]]):
             return Response({'error': 'Invalid ID format'}, status=400)
             
-        if parent == entity.id:
+        if parent == entity['id']:
             return Response({'error': 'Self-reference not allowed'}, status=400)
             
         try:
             if action == 'create':
-                # Create a new record
-                new_struktur = Struktur.objects.create(
-                    name = entity.name,
-                    parent = parent,
-                    primär_id = entity.type_id if entity.type == "Primär" else None,
-                    ordner_id = entity.type_id if entity.type == "Ordner" else None,
-                    team_id = entity.type_id if entity.type == "Team" else None,
-                    mitarbeiter_id = entity.type_id if entity.type == "Person" else None,
-                )
+                
+                # Create a new parent
+
+                struktur = Struktur.objects.get(struktur_id=entity['id'])
+                print(f"add parent: {parent}")
+                #struktur.parent = None
+                numbers_set = set(struktur.parent)
+                numbers_set.add(parent)  # Will only add if not present
+                struktur.parent = list(numbers_set)
+                print(f"struktur: {struktur.parent}")
+                struktur.save()
 
                 
             elif action == 'delete':
-                struktur = Struktur.objects.get(struktur_id=entity.id)
-                struktur.parent = None
+                struktur = Struktur.objects.get(struktur_id=entity['id'])
+                #struktur.parent = None
+                numbers_set = set(struktur.parent)
+                numbers_set.discard(parent)
+                struktur.parent = list(numbers_set)
+                print(f"struktur: {struktur}")
                 struktur.save()
             
             return Response({'success': True})
@@ -111,5 +121,6 @@ def manage_relation(request):
         
         except Exception as e:
             return Response({'error': 'Operation failed'}, status=500)
-        """
-
+    """else:
+        return Response({'error': 'You do not have permission to perform this action'}, status=403)
+    """
