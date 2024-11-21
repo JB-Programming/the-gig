@@ -70,29 +70,36 @@ def get_structure(request):
     return Response(tree)
 
 def build_tree(struktur_data):
-    # Step 1: Organize items by their struktur_id for easy lookup
-    struktur_dict = {item['struktur_id']: item for item in struktur_data}
+    # Create dictionary for quick lookup
+    nodes_by_id = {item['struktur_id']: {
+        'struktur_id': item['struktur_id'],
+        'name': item['name'],
+        'parent': item['parent'],
+        'primär_id': item['primär_id'],
+        'ordner_id': item['ordner_id'],
+        'team_id': item['team_id'],
+        'mitarbeiter_id': item['mitarbeiter_id'],
+        'children': []
+    } for item in struktur_data}
     
-    # Step 2: Initialize an empty list for the top-level items
-    tree = []
+    # Initialize root nodes list
+    root_nodes = []
     
-    # Step 3: Add an empty list to store children for each item
+    # Process each node
     for item in struktur_data:
-        item['children'] = []
-
-    # Step 4: Build the hierarchy
-    for item in struktur_data:
-        if item['parent'] is None:
-            # Top-level item (no parent)
-            tree.append(item)
-            print(item)
+        node = nodes_by_id[item['struktur_id']]
+        parent_ids = item['parent']
+        
+        if not parent_ids:  # If no parents, it's a root node
+            root_nodes.append(node)
         else:
-            # Child item: add to its parent's children list
-            parent_id = item['parent']
-            if parent_id in struktur_dict:
-                struktur_dict[parent_id]['children'].append(item)
+            # Add node as child to each parent
+            for parent_id in parent_ids:
+                if parent_id in nodes_by_id:
+                    nodes_by_id[parent_id]['children'].append(node)
     
-    return tree
+    return root_nodes
+
 
 def build_tree_with_null(request):
     """# Step 1: Parse the data into a dictionary
