@@ -35,7 +35,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <Box 
         sx={{ 
-          width: '280px',
+          width: '320px',
           position: 'fixed',
           left: 0,
           top: 64,
@@ -104,7 +104,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
       <Box 
         sx={{ 
           flexGrow: 1,
-          ml: '280px',
+          ml: '320px',
           p: 3,
         }}
       >
