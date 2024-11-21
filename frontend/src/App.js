@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Navigate, Routes } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import DashboardPage from './DashboardPage';
+import Structure from './Structure';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -31,6 +32,17 @@ const App = () => {
           element={
             isLoggedIn ? (
               <DashboardPage setIsLoggedIn={setIsLoggedIn} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+      
+      <Route 
+        path="/structure"
+        element={
+            isLoggedIn ? (
+              <Structure setIsLoggedIn={setIsLoggedIn} />
             ) : (
               <Navigate to="/" />
             )
