@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import styles from './CompanyStructure.module.css';
-import DataGrid from 'react-data-grid';
-import 'react-data-grid/lib/styles.css';
 import { useNavigate } from 'react-router-dom';
 
 const DashboardPage = ({ setIsLoggedIn }) => {

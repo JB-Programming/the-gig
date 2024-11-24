@@ -84,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'Hillmann_und_Geitz_DB',
         'USER': 'root',
-        'PASSWORD': 'Elina+35_elefanten!!tööö',
+        'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '3306',
     }
