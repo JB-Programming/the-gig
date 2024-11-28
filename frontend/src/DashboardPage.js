@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import DashboardTree from './components/DashboardTree';
-import { Box, Paper, Typography, Avatar } from '@mui/material';
+import { Box, Paper, Typography, Avatar, AppBar, Toolbar, Button} from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Structure from './Structure';
 
 const DashboardPage = ({ setIsLoggedIn }) => {
 
   const [userData, setUserData] = useState(null);
+  const [showNavBar, setShowNavBar] = useState(false);
+  const [activeTab, setActiveTab] = useState('struktur');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -48,7 +51,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
       <button onClick={handleLogout}>Logout</button>
       <button onClick={goToStructure}>Structure</button>
     </div> {**/
-    
+
   const userRole = userData?.is_superuser ? 'Superuser' : 
                   userData?.is_staff ? 'Administrator' : 'User';
 
@@ -72,6 +75,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
             isAdmin={userData?.is_staff}
             isSuperuser={userData?.is_superuser}
             userId={userData?.id}
+            setShowNavBar={setShowNavBar}
           />
         </Box>
 
@@ -129,7 +133,54 @@ const DashboardPage = ({ setIsLoggedIn }) => {
           p: 3,
         }}
       >
-        <h1>Dashboard</h1>
+        {showNavBar && (
+          <AppBar position="fixed" 
+            sx={{ 
+              width: 'calc(100% - 320px)',
+              ml: '320px',
+              backgroundColor: '#f5f5f5',
+              color: 'text.primary',
+              boxShadow: 1
+            }}
+          >
+            <Toolbar>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                Dashboard
+              </Typography>
+              <Button 
+                onClick={() => setActiveTab('stammdaten')}
+                sx={{ 
+                  color: activeTab === 'stammdaten' ? 'primary.main' : 'text.primary',
+                  mx: 1
+                }}
+              >
+                Stammdaten
+              </Button>
+              <Button 
+                onClick={() => setActiveTab('historie')}
+                sx={{ 
+                  color: activeTab === 'historie' ? 'primary.main' : 'text.primary',
+                  mx: 1
+                }}
+              >
+                Änderungshistorie
+              </Button>
+              <Button 
+                onClick={() => setActiveTab('struktur')}
+                sx={{ 
+                  color: activeTab === 'struktur' ? 'primary.main' : 'text.primary',
+                  mx: 1
+                }}
+              >
+                Struktur
+              </Button>
+            </Toolbar>
+          </AppBar>
+        )}
+        
+        {showNavBar && <Toolbar />}
+        
+        {showNavBar && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
       </Box>
     </Box>
   );

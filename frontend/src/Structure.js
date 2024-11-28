@@ -22,11 +22,34 @@ const Structure = ({ setIsLoggedIn }) => {
   // Add near other useState declarations
   const [showNewModal, setShowNewModal] = useState(false);
 
+  const extractUniqueObjects = (data) => {
+    const uniqueObjects = new Map();
+  
+    const processNode = (node) => {
+      // Add current node if not already present
+      if (!uniqueObjects.has(node.struktur_id)) {
+        uniqueObjects.set(node.struktur_id, node);
+      }
+  
+      // Process children recursively
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => processNode(child));
+      }
+    };
+  
+    // Process each root node
+    data.forEach(node => processNode(node));
+  
+    // Convert Map to array
+    return Array.from(uniqueObjects.values());
+  };
+
 
   const fetchTreeData = async () => {
     try {
       const response = await axios.get('http://localhost:8000/api/structure/');
-      const data = response.data;
+      var data = response.data;
+      data = extractUniqueObjects(data);
       console.log(data);
       const uniqueEntries = new Map();
       

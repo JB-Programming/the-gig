@@ -46,7 +46,7 @@ const App = () => {
             isLoggedIn ? (
               <Structure setIsLoggedIn={setIsLoggedIn} />
             ) : (
-              <Navigate to="/" />
+              <Navigate to="/structure"/>
             )
           }
       />

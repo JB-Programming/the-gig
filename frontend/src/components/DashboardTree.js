@@ -184,7 +184,17 @@ export default DashboardTree;
 
 */
 
-const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId }) => {
+const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setShowNavBar }) => {
+  const handleNodeClick = (node) => {
+    if (node.name === "Hillmann & Geitz") {
+      setShowNavBar(true);
+    }
+    else {
+      setShowNavBar(false);
+    }
+    console.log(node.name);
+    console.log("Motha fucka");
+  };
   const [employees, setEmployees] = useState([]);
   const [treeData, setTreeData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -251,7 +261,10 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId }) => {
           depth={depth}
           icon={node.mitarbeiter_id ? <PersonIcon /> : <FolderIcon />}
           primary={node.name}
-          onClick={() => handleClick(node.struktur_id)}
+          onClick={() => {
+            handleNodeClick(node);
+            handleClick(node.struktur_id)
+          }}
           isExpandable={hasChildren}
         />
         
@@ -317,7 +330,10 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId }) => {
           <ListItemStyled
             icon={<FolderIcon color="primary" />}
             primary="Hillmann & Geitz"
-            onClick={() => handleClick('root')}
+            onClick={() => {
+              handleNodeClick({ name: "Hillmann & Geitz" });
+              handleClick('root');
+            }}
             isExpandable
           />
 
