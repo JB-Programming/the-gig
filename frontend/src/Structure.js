@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styles from './CompanyStructure.module.css';
-import DataGrid from 'react-data-grid';
-import 'react-data-grid/lib/styles.css';
 
 const Structure = ({ setIsLoggedIn }) => {
 
@@ -21,57 +19,104 @@ const Structure = ({ setIsLoggedIn }) => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [checkedItems, setCheckedItems] = useState(new Set());
   const [selectedEntity, setSelectedEntity] = useState(null);
+  // Add near other useState declarations
+  const [showNewModal, setShowNewModal] = useState(false);
+
+
+  const fetchTreeData = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/structure/');
+      const data = response.data;
+      console.log(data);
+      const uniqueEntries = new Map();
+      
+      data.forEach(item => {
+        // Create composite key from all relevant IDs
+        console.log(typeof item.parent)
+        console.log(item.parent)
+
+        const idKey = [
+          `p${item.primär_id}`,
+          `o${item.ordner_id}`,
+          `t${item.team_id}`,
+          `m${item.mitarbeiter_id}`
+        ].filter(id => id.slice(1) !== 'null').join('_');
+        
+        if (idKey && !uniqueEntries.has(idKey)) {
+          uniqueEntries.set(idKey, {
+            id: item.struktur_id,
+            type: item.team_id ? 'Team' : 
+                  item.mitarbeiter_id ? 'Person' : 
+                  item.ordner_id ? 'Ordner' : 
+                  item.primär_id ? 'Primär' : 'Andere',
+            type_id: item.team_id || item.mitarbeiter_id || item.ordner_id || item.primär_id,
+            name: item.name.includes(',') ? item.name.split(', ')[1] : item.name,
+            vorname: item.name.includes(',') ? item.name.split(', ')[0] : '',
+            standort: '',
+            bemerkung: '' //`Parent: ${item.parent || 'None'}`
+          });
+        }
+      });
+      console.log([...uniqueEntries.values()])
+      setEntities([...uniqueEntries.values()]);
+      setTreeData(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch structure:', error);
+      setLoading(false);
+      setSelectedItems([]);
+    }
+  };
 
   // Update the useEffect to process the fetched data:
-  useEffect(() => {
-    const fetchTreeData = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/structure/');
-        const data = response.data;
-        console.log(data);
-        const uniqueEntries = new Map();
-        
-        data.forEach(item => {
-          // Create composite key from all relevant IDs
-          console.log(typeof item.parent)
-          console.log(item.parent)
-
-          const idKey = [
-            `p${item.primär_id}`,
-            `o${item.ordner_id}`,
-            `t${item.team_id}`,
-            `m${item.mitarbeiter_id}`
-          ].filter(id => id.slice(1) !== 'null').join('_');
-          
-          if (idKey && !uniqueEntries.has(idKey)) {
-            uniqueEntries.set(idKey, {
-              id: item.struktur_id,
-              type: item.team_id ? 'Team' : 
-                    item.mitarbeiter_id ? 'Person' : 
-                    item.ordner_id ? 'Ordner' : 
-                    item.primär_id ? 'Primär' : 'Andere',
-              type_id: item.team_id || item.mitarbeiter_id || item.ordner_id || item.primär_id,
-              name: item.name.includes(',') ? item.name.split(', ')[1] : item.name,
-              vorname: item.name.includes(',') ? item.name.split(', ')[0] : '',
-              standort: '',
-              bemerkung: '' //`Parent: ${item.parent || 'None'}`
-            });
-          }
-        });
-        console.log([...uniqueEntries.values()])
-        setEntities([...uniqueEntries.values()]);
-        setTreeData(data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch structure:', error);
-        setLoading(false);
-        setSelectedItems([]);
-      }
-    };
-  
+  useEffect(() => {  
     fetchTreeData();
   }, []);
+
+  useEffect(() => {
+    if (showNewModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showNewModal]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    const data = {
+      typ: e.target.elements.typ.value,
+      vorname: e.target.elements.vorname.value,
+      name: e.target.elements.name.value,
+      standort: e.target.elements.standort.value,
+      bemerkung: e.target.elements.bemerkung.value
+    };
+    try {
+      const response = await axios.post('http://localhost:8000/api/add_instance/', data, {
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('Success:', response.data);
+      e.target.reset();
+      setShowNewModal(false);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+};
+
   
+
+  // Add the click handler
+const handleNewClick = () => {
+  setShowNewModal(true);
+  console.log('New button clicked');
+};
+
   const handleRowClick = (entity) => {
     
     var relatedItems = [];
@@ -223,22 +268,24 @@ const Structure = ({ setIsLoggedIn }) => {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Unternehmensstruktur</h1>
-        <button className={styles.button}>Baum aktualisieren</button>
       </div>
       <div className={styles.grid}>
         <div className={styles.card}>
           <div className={styles.cardSubtitle}>ANLEGEN UND ÄNDERN</div>
           <h2 className={styles.cardTitle}>Alle Entitäten</h2>
           <div className={styles.controls}>
+             
             <div>
+              {/*
               <select className={styles.select}>
                 <option>Show 25 rows</option>
                 <option>Show 50 rows</option>
                 <option>Show 100 rows</option>
               </select>
-              
-                <button className={styles.button}>New</button>
+              */}
+                <button className={styles.button} onClick={handleNewClick}>New</button>
                 <button className={styles.button}>Edit</button>
+                <button className={styles.button} onClick={fetchTreeData}>Baum aktualisieren</button>
               
             </div>
             <input type="text" className={styles.input} placeholder="Suchen" />
@@ -246,7 +293,7 @@ const Structure = ({ setIsLoggedIn }) => {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>ID</th>
+                {/*<th>ID</th>*/}
                 <th>Typ</th>
                 <th>Vorname</th>
                 <th>Name</th>
@@ -255,14 +302,24 @@ const Structure = ({ setIsLoggedIn }) => {
               </tr>
             </thead>
             <tbody>
-              {entities.map((entity) => (
+              {entities
+                .sort((a, b) => {
+                  const typeOrder = {
+                    'Ordner': 1,
+                    'Primär': 2,
+                    'Team': 3,
+                    'Person': 4
+                  };
+                  return typeOrder[a.type] - typeOrder[b.type];
+                })
+              .map((entity) => (
                 <tr 
                 key={entity.id} 
                 onClick={() => handleRowClick(entity)}
                 style={{ cursor: 'pointer' }}
                 className={styles.tableRow}
               >
-                  <td>{entity.id}</td>
+                  {/*<td>{entity.id}</td>*/}
                   <td>{entity.type}</td>
                   <td>{entity.vorname}</td>
                   <td>{entity.name}</td>
@@ -272,21 +329,26 @@ const Structure = ({ setIsLoggedIn }) => {
               ))}
             </tbody>
           </table>
+          {/*
           <div className={styles.pagination}>
             <button className={styles.button}>Zurück</button>
             <button className={styles.button}>1</button>
             <button className={styles.button}>Nächste</button>
           </div>
+          */}
         </div>
+        
         <div className={styles.card}>
           <div className={styles.cardSubtitle}>ÜBERGEORDNETE OBJEKTE</div>
           <h2 className={styles.cardTitle}>Teams und Gruppen</h2>
           <div className={styles.controls}>
+            {/* 
             <select className={styles.select}>
               <option>Show 50 rows</option>
               <option>Show 25 rows</option>
               <option>Show 100 rows</option>
             </select>
+            */}
             <div>
               <input type="text" className={styles.input} placeholder="Suchen" />
             </div>
@@ -323,12 +385,51 @@ const Structure = ({ setIsLoggedIn }) => {
               )}
             </tbody>
           </table>
+          {/* 
           <div className={styles.pagination}>
             <button className={styles.button}>Zurück</button>
             <button className={styles.button}>Nächste</button>
           </div>
+          */}
         </div>
       </div>
+
+{showNewModal && (
+  <>
+    <div className={styles.overlay} onClick={() => setShowNewModal(false)} />
+    <div className={styles.modal}>
+      <h2>Create New Entry</h2>
+      <form className={styles.modalForm} onSubmit={handleSave}>
+        <select name="typ" className={styles.select}>
+          <option value="">Select Type</option>
+          <option value="Team">Team</option>
+          <option value="Person">Person</option>
+          <option value="Ordner">Ordner</option>
+          <option value="Primär">Primär</option>
+        </select>
+        <input type="text" name="vorname" placeholder="Vorname" />
+        <input type="text" name="name" placeholder="Name" />
+        <input type="text" name="standort" placeholder="Standort" />
+        <input type="text" name="bemerkung" placeholder="Bemerkung" />
+        <div className={styles.modalButtons}>
+          <button 
+            className={styles.button} 
+            onClick={() => setShowNewModal(false)}
+            type="button"
+          >
+            Cancel
+          </button>
+          <button 
+            className={styles.button} 
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </>
+)}
     </div>
   );
 

@@ -5,7 +5,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
-from .models import Struktur
+from .models import Struktur, Employee, Folder, Primary, Team
 from django.http import JsonResponse
 from rest_framework.permissions import IsAdminUser
 from rest_framework.throttling import UserRateThrottle
@@ -67,6 +67,82 @@ def build_tree_with_null(request):
 
 class RelationRateThrottle(UserRateThrottle):
     rate = '100/hour'
+
+
+@api_view(['POST'])
+def create_instance(request):
+    #if request.user.is_superuser:
+    try:
+        with transaction.atomic():
+            new_typ = request.data.get('typ')
+            new_vorname = request.data.get('vorname')
+            new_name = request.data.get('name')
+            new_standort = request.data.get('standort')
+            new_bemerkung = request.data.get('bemerkung')
+            print(new_typ)
+
+            if new_typ != "Person" and new_typ != 'Team' and new_typ != 'Ordner' and new_typ != 'Primär':
+                print("Invalid type")
+                return Response({'error': 'Invalid type'}, status=400)
+            elif new_typ == "Person":
+                print("test")
+                employee = Employee.objects.create(
+                    mitarbeiter_aktiv=True,
+                    login_gesperrt=False,
+                    vorname=new_vorname,
+                    nachname=new_name,
+                    standort=new_standort,
+                    bemerkung=new_bemerkung,
+                )
+
+                # Then create the corresponding Struktur entry
+                struktur = Struktur.objects.create(
+                    name=f"{new_vorname}, {new_name}",
+                    mitarbeiter_id=employee.id,
+                    parent=[]
+                )
+                print(employee.id)
+                return Response({'success': True, 'id_mit': employee.id, 'id_struktur': struktur.struktur_id})
+            elif new_typ == "Team":
+                team = Team.objects.create(
+                    bezeichnung = new_name,
+                    notiz = new_bemerkung
+                )
+
+                struktur = Struktur.objects.create(
+                    name=f"{new_name}",
+                    team_id=team.id,  # Generate appropriate ID
+                    parent=[]
+                )
+                return Response({'success': True, 'id_mit': team.id, 'id_struktur': struktur.struktur_id})
+            elif new_typ == "Ordner":
+                ordner = Folder.objects.create(
+                    bezeichnung = new_name,
+                    notiz = new_bemerkung
+                )
+
+                struktur = Struktur.objects.create(
+                    name=f"{new_name}",
+                    ordner_id=ordner.id,  # Generate appropriate ID
+                    parent=[]
+                )
+                return Response({'success': True, 'id_mit': ordner.id, 'id_struktur': struktur.struktur_id})
+            elif new_typ == "Primär":
+                primär = Primary.objects.create(
+                    bezeichnung = new_name,
+                    notiz = new_bemerkung
+                )
+
+                struktur = Struktur.objects.create(
+                    name=f"{new_name}",
+                    primär_id=primär.id,  # Generate appropriate ID
+                    parent=[]
+                )
+                return Response({'success': True, 'id_mit': primär.id, 'id_struktur': struktur.struktur_id})
+            
+        
+    except Exception as e:
+        return Response({'error': 'Operation failed'}, status=500)
 
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
