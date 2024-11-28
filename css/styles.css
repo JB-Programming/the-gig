@@ -1,0 +1,103 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #f4f4f4;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#logout-btn {
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.container {
+    display: flex;
+    min-height: calc(100vh - 120px); /* Adjust based on header and footer height */
+}
+
+#folder-menu {
+    width: 20%;
+    background-color: #f4f4f4;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+main {
+    flex-grow: 1;
+    padding: 1rem;
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+}
+
+#folder-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#folder-list li {
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+#folder-list li::before {
+    content: '▶';
+    display: inline-block;
+    margin-right: 5px;
+    transition: transform 0.3s;
+}
+
+#folder-list li.open::before {
+    transform: rotate(90deg);
+}
+
+#folder-list ul {
+    display: none;
+}
+
+#folder-list li.open > ul {
+    display: block;
+}
+
+.folder {
+    font-weight: bold;
+}
+
+.subfolder {
+    font-weight: normal;
+}
+
+#finance-data {
+    margin-top: 1rem;
+}
+
+#finance-data table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#finance-data th, #finance-data td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#finance-data th {
+    background-color: #f2f2f2;
+}

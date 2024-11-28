@@ -1,5 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+/*
+const CompanyStructurePage = () => {
+  const [treeData, setTreeData] = useState([]);  // State to hold the fetched data
+  const [loading, setLoading] = useState(true);  // Loading state
+
+  // Fetch data from the API when the component mounts
+  useEffect(() => {
+    const fetchTreeData = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/structure/');
+        const data = response.data;
+        setTreeData(data);         // Store the fetched data in state
+        console.log(data);
+        setLoading(false);         // Set loading to false once data is fetched
+      } catch (error) {
+        console.error('Failed to fetch structure:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchTreeData();
+  }, []);  // Empty dependency array ensures this runs only once on mount
+
+  // Display a loading message while data is being fetched
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <div>
+      <h1>Structure Data</h1>
+
+      {/* Render the fetched data in JSON format }
+      <h2>JSON Data Display</h2>
+      <pre id="json-display">
+        {JSON.stringify(treeData, null, 2)}  {/* Pretty print the JSON tree }
+      </pre>
+
+      <ul>
+        {treeData.map((item) => (
+          <li key={item.struktur_id}>
+            <p><strong>ID:</strong> {item.struktur_id}</p>
+            <p><strong>Name:</strong> {item.name}</p>
+            <p><strong>Parent ID:</strong> {item.parent}</p>
+            <p><strong>Primary Team ID:</strong> {item.primär_id}</p>
+            <p><strong>Ordner ID:</strong> {item.ordner_id}</p>
+            <p><strong>Team ID:</strong> {item.team_id}</p>
+            <p><strong>Person ID:</strong> {item.mitarbeiter_id}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default CompanyStructurePage;
+*/
+
 const CompanyStructurePage = () => {
   const [treeData, setTreeData] = useState([]);  // State to hold the fetched data
   const [loading, setLoading] = useState(true);  // Loading state
@@ -81,8 +137,8 @@ const CompanyStructurePage = () => {
       <div>{renderTree(treeData)}</div>
     </div>
     
-
   );
 };
 
 export default CompanyStructurePage;
+
