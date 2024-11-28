@@ -284,11 +284,11 @@ const handleNewClick = () => {
               </select>
               */}
                 <button className={styles.button} onClick={handleNewClick}>New</button>
-                <button className={styles.button}>Edit</button>
+                {/* <button className={styles.button}>Edit</button> */}
                 <button className={styles.button} onClick={fetchTreeData}>Baum aktualisieren</button>
               
             </div>
-            <input type="text" className={styles.input} placeholder="Suchen" />
+            {/*<input type="text" className={styles.input} placeholder="Suchen" /> */}
           </div>
           <table className={styles.table}>
             <thead>
@@ -350,13 +350,13 @@ const handleNewClick = () => {
             </select>
             */}
             <div>
-              <input type="text" className={styles.input} placeholder="Suchen" />
+              {/* <input type="text" className={styles.input} placeholder="Suchen" /> */}
             </div>
           </div>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>P</th>
+                <th></th>
                 <th>Name</th>
                 <th>Typ</th>
               </tr>
