@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import DashboardTree from './components/DashboardTree';
-import { Box, Paper, Typography, Avatar } from '@mui/material';
+import { Box, Paper, Typography, Avatar, Tabs, Tab } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import YearlyData from './components/tabs/YearlyData';
+import Agreements from './components/tabs/Agreements';
+import MasterData from './components/tabs/MasterData';
+import ChangeHistory from './components/tabs/ChangeHistory';
 
 const DashboardPage = ({ setIsLoggedIn }) => {
   const [userData, setUserData] = useState(null);
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedPerson, setSelectedPerson] = useState(null);
+
+  useEffect(() => {
+    console.log('Selected person changed:', selectedPerson);
+  }, [selectedPerson]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -31,6 +41,24 @@ const DashboardPage = ({ setIsLoggedIn }) => {
   const userRole = userData?.is_superuser ? 'Superuser' : 
                   userData?.is_staff ? 'Administrator' : 'User';
 
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
+  };
+
+  const handlePersonSelect = (person) => {
+    console.log('Person selected in DashboardPage:', person);
+    setSelectedPerson(person);
+  };
+
+  // TabPanel Komponente für den Inhalt
+  function TabPanel({ children, value, index }) {
+    return (
+      <div hidden={value !== index} style={{ padding: '20px 0' }}>
+        {value === index && children}
+      </div>
+    );
+  }
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <Box 
@@ -51,6 +79,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
             isAdmin={userData?.is_staff}
             isSuperuser={userData?.is_superuser}
             userId={userData?.id}
+            onPersonSelect={handlePersonSelect}
           />
         </Box>
 
@@ -108,7 +137,55 @@ const DashboardPage = ({ setIsLoggedIn }) => {
           p: 3,
         }}
       >
-        <h1>Dashboard</h1>
+        <Typography variant="h4" sx={{ mb: 3 }}>Dashboard</Typography>
+        
+        {selectedPerson ? (
+          <>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              {selectedPerson.vorname} {selectedPerson.nachname}
+            </Typography>
+            
+            <Box sx={{ 
+              borderBottom: 1, 
+              borderColor: 'divider',
+              backgroundColor: '#fff',
+              '& .MuiTabs-indicator': {
+                backgroundColor: 'primary.main',
+              },
+            }}>
+              <Tabs 
+                value={selectedTab} 
+                onChange={(e, newValue) => setSelectedTab(newValue)}
+                sx={{
+                  '& .MuiTab-root': {
+                    textTransform: 'none',
+                    minWidth: 120,
+                  }
+                }}
+              >
+                <Tab label="Jahresdaten" />
+                <Tab label="Vereinbarungen" />
+                <Tab label="Stammdaten" />
+                <Tab label="Änderungshistorie" />
+              </Tabs>
+            </Box>
+
+            <TabPanel value={selectedTab} index={0}>
+              <YearlyData person={selectedPerson} />
+            </TabPanel>
+            <TabPanel value={selectedTab} index={1}>
+              <Agreements person={selectedPerson} />
+            </TabPanel>
+            <TabPanel value={selectedTab} index={2}>
+              <MasterData person={selectedPerson} />
+            </TabPanel>
+            <TabPanel value={selectedTab} index={3}>
+              <ChangeHistory person={selectedPerson} />
+            </TabPanel>
+          </>
+        ) : (
+          <Typography>Bitte wählen Sie eine Person aus</Typography>
+        )}
       </Box>
     </Box>
   );
