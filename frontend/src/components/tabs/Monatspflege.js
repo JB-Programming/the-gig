@@ -43,16 +43,82 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
     };
 
     const handleUpload = () => {
-    console.log("Hochladen: ", selectedFile);
+        console.log("Hochladen: ", selectedFile);
     };
 
     const handleSave = () => {
-    console.log("Daten gespeichert");
+        console.log("Daten gespeichert");
     };
 
     const handleMonthClose = () => {
-    console.log("Monatsabschluss durchgeführt");
+        console.log("Monatsabschluss durchgeführt");
     };
+
+    const formatNumber = (num) => {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    };
+    
+    const stripFormatting = (str) => {
+        return str.replace(/\./g, '');
+    };
+    
+    const formatPercentage = (num) => {
+        if (!num) return '0,0000%';
+        
+        let parts = num.split(',');
+        if (!parts[1]) {
+          parts[1] = '0000';
+        } else {
+          parts[1] = parts[1].padEnd(4, '0').substring(0, 4);
+        }
+        
+        return `${parts.join(',')}%`;
+    };
+      
+    
+    const stripPercentage = (str) => {
+        return str.replace(/[%]/g, '');
+    };
+    
+    const handleInputChange = (index, field, value) => {
+    if (field === 'dbPercent') {
+        // Allow numbers and one comma
+        const commaCount = (value.match(/,/g) || []).length;
+        if (commaCount > 1) return;
+        
+        const numericValue = value.replace(/[^\d,]/g, '');
+        const newData = [...data];
+        newData[index][field] = numericValue;
+        setData(newData);
+    } else {
+        // Original number handling for other fields
+        const numericValue = value.replace(/[^\d]/g, '');
+        const newData = [...data];
+        newData[index][field] = numericValue;
+        setData(newData);
+    }
+    };
+    
+    const handleInputBlur = (index, field) => {
+    const newData = [...data];
+    if (field === 'dbPercent') {
+        newData[index][field] = formatPercentage(newData[index][field] || '0');
+    } else {
+        newData[index][field] = formatNumber(newData[index][field] || '0');
+    }
+    setData(newData);
+    };
+    
+    const handleInputFocus = (index, field) => {
+    const newData = [...data];
+    if (field === 'dbPercent') {
+        newData[index][field] = stripPercentage(newData[index][field]);
+    } else {
+        newData[index][field] = stripFormatting(newData[index][field]);
+    }
+    setData(newData);
+    };
+      
 
     return (
     <div style={{ padding: "20px" }}>
@@ -76,34 +142,82 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
         </button>
         </div>
 
+
         {/* Tabelle */}
         <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                <TableRow>
-                    <TableCell>Entität</TableCell>
-                    <TableCell>Umsatz</TableCell>
-                    <TableCell>DB IST in %</TableCell>
-                    <TableCell>DB</TableCell>
-                    <TableCell>Teamanpassung</TableCell>
-                </TableRow>
-                </TableHead>
-                <TableBody>
-                {data.map((row, index) => (
-                    <TableRow 
-                    key={index}
-                    sx={{ '&:nth-of-type(odd)': { backgroundColor: '#f9f9f9' } }}
-                    >
-                    <TableCell>{row.entity}</TableCell>
-                    <TableCell>{row.revenue}</TableCell>
-                    <TableCell>{row.dbPercent}</TableCell>
-                    <TableCell>{row.db}</TableCell>
-                    <TableCell>{row.teamAdjustment}</TableCell>
-                    </TableRow>
-                ))}
-                </TableBody>
-            </Table>
-            </TableContainer>
+  <Table>
+    <TableHead>
+      <TableRow sx={{ backgroundColor: 'primary.light' }}>
+        <TableCell width="20%">Entität</TableCell>
+        <TableCell width="20%">Umsatz</TableCell>
+        <TableCell width="20%">DB IST in %</TableCell>
+        <TableCell width="20%">DB</TableCell>
+        <TableCell width="20%">Teamanpassung</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {data.map((row, index) => (
+        <TableRow key={index}>
+          <TableCell width="20%">{row.entity}</TableCell>
+          <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
+            <input 
+              type="text" 
+              value={row.revenue} 
+              onChange={(e) => handleInputChange(index, 'revenue', e.target.value)}
+              onBlur={() => handleInputBlur(index, 'revenue')}
+              onFocus={() => handleInputFocus(index, 'revenue')}
+              style={{ 
+                width: '100%-16px', 
+                border: 'none', 
+                backgroundColor: 'transparent', 
+                padding: '8px',
+                outline: 'none',
+                textAlign: 'right'
+              }}
+            />
+          </TableCell>
+          <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
+            <input 
+              type="text" 
+              value={row.dbPercent} 
+              onChange={(e) => handleInputChange(index, 'dbPercent', e.target.value)}
+              onBlur={() => handleInputBlur(index, 'dbPercent')}
+              onFocus={() => handleInputFocus(index, 'dbPercent')}
+              style={{ 
+                width: '100%-16px', 
+                border: 'none', 
+                backgroundColor: 'transparent', 
+                padding: '8px',
+                outline: 'none',
+                textAlign: 'right'
+              }}
+            />
+          </TableCell>
+          <TableCell width="20%" sx={{ backgroundColor: '#e3f2fd', padding: '12px' }}>{row.db}</TableCell>
+          <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
+            <input 
+              type="text" 
+              value={row.teamAdjustment} 
+              onChange={(e) => handleInputChange(index, 'teamAdjustment', e.target.value)}
+              style={{ 
+                width: '100%-16px', 
+                border: 'none', 
+                backgroundColor: 'transparent', 
+                padding: '8px',
+                outline: 'none',
+                textAlign: 'right'
+              }}
+            />
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</TableContainer>
+
+
+
+
 
 
         {/* Pagination */}
