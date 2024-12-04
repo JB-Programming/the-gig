@@ -7,7 +7,14 @@ import {
   Collapse,
   Box,
   Typography,
-  Paper
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow, 
+  Paper,
+  CircularProgress
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -70,28 +77,34 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
         </div>
 
         {/* Tabelle */}
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-            <tr>
-            <th style={{ border: "1px solid #ddd", padding: "8px" }}>Entität</th>
-            <th style={{ border: "1px solid #ddd", padding: "8px" }}>Umsatz</th>
-            <th style={{ border: "1px solid #ddd", padding: "8px" }}>DB IST in %</th>
-            <th style={{ border: "1px solid #ddd", padding: "8px" }}>DB</th>
-            <th style={{ border: "1px solid #ddd", padding: "8px" }}>Teamanpassung</th>
-            </tr>
-        </thead>
-        <tbody>
-            {data.map((row, index) => (
-            <tr key={index} style={{ backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#fff" }}>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>{row.entity}</td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>{row.revenue}</td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>{row.dbPercent}</td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>{row.db}</td>
-                <td style={{ border: "1px solid #ddd", padding: "8px" }}>{row.teamAdjustment}</td>
-            </tr>
-            ))}
-        </tbody>
-        </table>
+        <TableContainer component={Paper}>
+            <Table>
+                <TableHead>
+                <TableRow>
+                    <TableCell>Entität</TableCell>
+                    <TableCell>Umsatz</TableCell>
+                    <TableCell>DB IST in %</TableCell>
+                    <TableCell>DB</TableCell>
+                    <TableCell>Teamanpassung</TableCell>
+                </TableRow>
+                </TableHead>
+                <TableBody>
+                {data.map((row, index) => (
+                    <TableRow 
+                    key={index}
+                    sx={{ '&:nth-of-type(odd)': { backgroundColor: '#f9f9f9' } }}
+                    >
+                    <TableCell>{row.entity}</TableCell>
+                    <TableCell>{row.revenue}</TableCell>
+                    <TableCell>{row.dbPercent}</TableCell>
+                    <TableCell>{row.db}</TableCell>
+                    <TableCell>{row.teamAdjustment}</TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+            </TableContainer>
+
 
         {/* Pagination */}
         <div style={{ marginTop: "20px", textAlign: "center" }}>
