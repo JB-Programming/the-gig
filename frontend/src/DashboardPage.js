@@ -5,11 +5,12 @@ import DashboardTree from './components/DashboardTree';
 import { Box, Paper, Typography, Avatar, AppBar, Toolbar, Button} from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Structure from './Structure';
+import Monatspflege from './components/tabs/Monatspflege';
 
 const DashboardPage = ({ setIsLoggedIn }) => {
 
   const [userData, setUserData] = useState(null);
-  const [showNavBar, setShowNavBar] = useState(false);
+  const [showNavBar, setShowNavBar] = useState(null);
   const [activeTab, setActiveTab] = useState('struktur');
 
   useEffect(() => {
@@ -180,7 +181,8 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         
         {showNavBar && <Toolbar />}
         
-        {showNavBar && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
+        {showNavBar == "Hillmann & Geitz" && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
+        {showNavBar === "Monatspflege" && <Monatspflege />}
       </Box>
     </Box>
   );

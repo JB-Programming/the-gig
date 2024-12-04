@@ -186,15 +186,10 @@ export default DashboardTree;
 
 const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setShowNavBar }) => {
   const handleNodeClick = (node) => {
-    if (node.name === "Hillmann & Geitz") {
-      setShowNavBar(true);
-    }
-    else {
-      setShowNavBar(false);
-    }
-    console.log(node.name);
-    console.log("Motha fucka");
-  };
+      setShowNavBar(node.name);
+      console.log(node.name);
+    };
+
   const [employees, setEmployees] = useState([]);
   const [treeData, setTreeData] = useState([]);
   const [loading, setLoading] = useState(true);
