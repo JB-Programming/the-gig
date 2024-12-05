@@ -25,18 +25,43 @@ import axios from 'axios';
 const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNavBar }) => {
 
     const [selectedFile, setSelectedFile] = useState(null);
-    const [data, setData] = useState([
-    { entity: "Hillmann & Geitz gesamt DB", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    { entity: "DB alle AD Kunden", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    { entity: "DB Kunden 03", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    { entity: "DB AD Gebiet Meyer", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    { entity: "DB Neukunden Meyer", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    { entity: "DB Gebiet Küpker", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    { entity: "DB Neukunden Küpker", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    { entity: "DB Gebiet Harms", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    { entity: "DB Neukunden Harms", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    { entity: "Summe", revenue: "", dbPercent: "", db: "", teamAdjustment: 0 },
-    ]);
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        const fetchEntities = async () => {
+          try {
+            const response = await axios.get('http://localhost:8000/api/primary/');
+            const initialData = response.data.teams.map(team => ({
+              entity: team,
+              revenue: '',
+              dbPercent: '',
+              db: '',
+              teamAdjustment: '0'
+            }));
+            
+            setData(initialData);
+
+            console.log('Loaded data:', initialData);
+          } catch (error) {
+            console.log('Error fetching entities:', error);
+          }
+        };
+      
+        fetchEntities();
+      }, []);
+
+    const handleSave = () => {
+        const formattedData = data.map(row => ({
+          entity: row.entity,
+          revenue: stripFormatting(row.revenue),
+          dbPercent: stripPercentage(row.dbPercent),
+          db: stripFormatting(row.db),
+          teamAdjustment: row.teamAdjustment
+        }));
+      
+        console.log('Saved Data:', formattedData);
+        // Here you can send the data to your backend
+    };
 
     const handleFileUpload = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -44,10 +69,6 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
 
     const handleUpload = () => {
         console.log("Hochladen: ", selectedFile);
-    };
-
-    const handleSave = () => {
-        console.log("Daten gespeichert");
     };
 
     const handleMonthClose = () => {
@@ -79,34 +100,53 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
     const stripPercentage = (str) => {
         return str.replace(/[%]/g, '');
     };
+
+    const calculateDB = (revenue, dbPercent) => {
+        if (!revenue || !dbPercent) return '';
+        
+        const cleanRevenue = stripFormatting(revenue);
+        const cleanDBPercent = stripPercentage(dbPercent);
+        const numericDBPercent = cleanDBPercent.replace(',', '.');
+        
+        const result = (parseFloat(cleanRevenue) * parseFloat(numericDBPercent)) / 100;
+        return formatNumber(Math.round(result).toString());
+    };
     
     const handleInputChange = (index, field, value) => {
-    if (field === 'dbPercent') {
-        // Allow numbers and one comma
-        const commaCount = (value.match(/,/g) || []).length;
-        if (commaCount > 1) return;
+        const newData = [...data];
         
-        const numericValue = value.replace(/[^\d,]/g, '');
-        const newData = [...data];
-        newData[index][field] = numericValue;
+        if (field === 'dbPercent') {
+          const commaCount = (value.match(/,/g) || []).length;
+          if (commaCount > 1) return;
+          const numericValue = value.replace(/[^\d,]/g, '');
+          newData[index][field] = numericValue;
+        } else {
+          const numericValue = value.replace(/[^\d]/g, '');
+          newData[index][field] = numericValue;
+        }
+        
+        // Calculate DB after input change
+        newData[index].db = calculateDB(newData[index].revenue, newData[index].dbPercent);
+        
         setData(newData);
-    } else {
-        // Original number handling for other fields
-        const numericValue = value.replace(/[^\d]/g, '');
-        const newData = [...data];
-        newData[index][field] = numericValue;
-        setData(newData);
-    }
     };
     
     const handleInputBlur = (index, field) => {
-    const newData = [...data];
-    if (field === 'dbPercent') {
-        newData[index][field] = formatPercentage(newData[index][field] || '0');
-    } else {
-        newData[index][field] = formatNumber(newData[index][field] || '0');
-    }
-    setData(newData);
+        const newData = [...data];
+        if (field === 'dbPercent') {
+          let value = newData[index][field];
+          // Remove leading zeros before comma
+          value = value.replace(/^0+(?=\d)/, '');
+          if (!value) value = '0';
+          newData[index][field] = formatPercentage(value);
+        } else {
+          let value = newData[index][field];
+          // Remove leading zeros
+          value = value.replace(/^0+(?=\d)/, '');
+          if (!value) value = '0';
+          newData[index][field] = formatNumber(value);
+        }
+        setData(newData);
     };
     
     const handleInputFocus = (index, field) => {
@@ -118,6 +158,42 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
     }
     setData(newData);
     };
+
+    const calculateRevenueSum = () => {
+        return data.reduce((sum, row) => {
+          const value = stripFormatting(row.revenue);
+          return sum + (parseInt(value) || 0);
+        }, 0);
+      };
+      
+    const calculateAverageDBPercent = () => {
+        let count = 0;
+        const sum = data.reduce((sum, row) => {
+          const value = stripPercentage(row.dbPercent).replace(',', '.');
+          if (value && value !== '0') {
+            count++;
+            return sum + parseFloat(value);
+          }
+          return sum;
+        }, 0);
+        
+        const average = count > 0 ? sum / count : 0;
+        return formatPercentage(average.toString().replace('.', ','));
+    };
+      
+      const calculateDBSum = () => {
+        return data.reduce((sum, row) => {
+          const value = stripFormatting(row.db);
+          return sum + (parseInt(value) || 0);
+        }, 0);
+      };
+      
+      const calculateTeamAdjustmentSum = () => {
+        return data.reduce((sum, row) => {
+          const value = stripFormatting(row.teamAdjustment);
+          return sum + (parseInt(value) || 0);
+        }, 0);
+      };
       
 
     return (
@@ -211,6 +287,22 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
           </TableCell>
         </TableRow>
       ))}
+      {/* Sum row */}
+        <TableRow>
+            <TableCell sx={{ backgroundColor: '#bcbcbc' }}>Summe</TableCell>
+            <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
+            {formatNumber(calculateRevenueSum())}
+            </TableCell>
+            <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
+            {calculateAverageDBPercent()}
+            </TableCell>
+            <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
+            {formatNumber(calculateDBSum())}
+            </TableCell>
+            <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
+            {formatNumber(calculateTeamAdjustmentSum())}
+            </TableCell>
+        </TableRow>
     </TableBody>
   </Table>
 </TableContainer>

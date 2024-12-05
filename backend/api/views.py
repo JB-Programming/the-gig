@@ -127,6 +127,23 @@ def build_tree_with_null(request):
     return JsonResponse(list(data), safe=False)
 
 
+class PrimaryListView(APIView):
+    def get(self, request):
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT bezeichnung 
+                    FROM primärteam_stammdaten 
+                """)
+                teams = [row[0] for row in cursor.fetchall()]
+            
+            return Response({'teams': teams})
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to fetch teams: {str(e)}'}, 
+                status=500
+            )
+
 class TeamListView(APIView):
     def get(self, request):
         try:
