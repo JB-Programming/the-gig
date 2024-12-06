@@ -94,3 +94,20 @@ class Team(models.Model):
 
     class Meta:
         db_table = 'team_stammdaten'
+
+
+class MonatsdatenTeams(models.Model):
+    jahr_und_monat = models.DateField(primary_key=True)
+    primaerteam_id = models.IntegerField(null = False, blank = False)
+    umsatz_plan = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    umsatz = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    db_plan = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True)
+    db_ist = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True)
+    teamanpassung = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'monatsdaten_teams'
+        unique_together = ('jahr_und_monat', 'primaerteam_id')
+        constraints = [
+            models.UniqueConstraint(fields=['jahr_und_monat', 'primaerteam_id'], name='monatsdaten_teams_pk')
+        ]

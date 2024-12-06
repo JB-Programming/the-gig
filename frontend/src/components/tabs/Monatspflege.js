@@ -26,8 +26,13 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
 
     const [selectedFile, setSelectedFile] = useState(null);
     const [data, setData] = useState([]);
+    const [selectedMonth, setSelectedMonth] = useState(
+        `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+      );
+      
 
     useEffect(() => {
+        console.log(data)
         const fetchEntities = async () => {
           try {
             const response = await axios.get('http://localhost:8000/api/primary/');
@@ -40,7 +45,7 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
             }));
             
             setData(initialData);
-
+            console.log("3 2 1 "+initialData)
             console.log('Loaded data:', initialData);
           } catch (error) {
             console.log('Error fetching entities:', error);
@@ -49,6 +54,56 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
       
         fetchEntities();
       }, []);
+
+    useEffect(() => {
+        console.log('selectedMonth changed to:', selectedMonth);
+        const fetchMonthlyData = async (selectedMonth) => {
+            const token = localStorage.getItem('token');
+            try{
+                console.log(selectedMonth.split('-'));
+                const [year, month] = selectedMonth.split('-');
+                console.log(year)
+                console.log(month)
+                const response = await axios.post('http://localhost:8000/api/monthly/', {
+                    year: parseInt(year),
+                    month: parseInt(month),
+                    day: 1
+                }, {
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if(response.data != null){
+                    console.log('Response data:', response.data);
+                    console.log("HIT"+ data[0])
+                    const mappedData = response.data.map((item, index) => ({
+                        entity: data[index-1]?.entity || '',  // Keep existing entity name
+                        revenue: item.umsatz,
+                        dbPercent: item.db_ist,
+                        db: ((parseFloat(item.umsatz) * parseFloat(item.db_ist)) / 100).toString(),
+                        teamAdjustment: item.teamanpassung.toString()
+                    }));
+                                    
+                setData(mappedData);
+                }
+                console.log('Response data:', response.data);
+                console.log("HIT"+ data[0])
+                const mappedData = response.data.map((item, index) => ({
+                    entity: data[index-1].entity,  // Keep existing entity name
+                    revenue: item.umsatz,
+                    dbPercent: item.db_ist,
+                    db: ((parseFloat(item.umsatz) * parseFloat(item.db_ist)) / 100).toString(),
+                    teamAdjustment: item.teamanpassung.toString()
+                  }));
+                                    
+                setData(mappedData);
+            } catch (error) {
+                console.log('Error fetching entities:', error);
+            }
+        };
+        fetchMonthlyData(selectedMonth);
+    }, [selectedMonth]);
 
     const handleSave = () => {
         const formattedData = data.map(row => ({
@@ -194,12 +249,56 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
           return sum + (parseInt(value) || 0);
         }, 0);
       };
+
+      const generateMonthOptions = () => {
+        const options = [];
+        const today = new Date();
+        
+        // Add next 2 months
+        for (let i = 2; i >= 0; i--) {
+          const futureDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+          const option = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}`;
+          options.push(option);
+        }
+        
+        // Add past 24 months
+        for (let i = 1; i <= 24; i++) {
+          const pastDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+          const option = `${pastDate.getFullYear()}-${String(pastDate.getMonth() + 1).padStart(2, '0')}`;
+          options.push(option);
+        }
+        
+        return options;
+      };
+
+      const handleDateChange = (e) => {
+        const date = e.target.value;
+        console.log(date)
+        setSelectedMonth(date);
+        console.log('Selected date:', selectedMonth);
+      };
       
 
     return (
     <div style={{ padding: "20px" }}>
         <h2>Monatspflege</h2>
         <h3>Summen im November 2024</h3>
+        {/* Add dropdown above the table */}
+        <select 
+        value={selectedMonth} 
+        onChange={handleDateChange}
+        style={{ 
+            marginBottom: '20px', 
+            padding: '8px', 
+            marginRight: '10px', 
+            borderRadius: '4px', 
+            border: '1px solid #ccc',
+         }}
+        >
+        {generateMonthOptions().map(month => (
+            <option key={month} value={month}>{month}</option>
+        ))}
+        </select>
 
         {/* Dateiimport und Buttons */}
         <div style={{ marginBottom: "20px" }}>

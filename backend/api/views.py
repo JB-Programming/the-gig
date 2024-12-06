@@ -18,6 +18,13 @@ from django.db import connection
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 
+from django.http import JsonResponse
+from django.db import connection
+from .models import teamschlüssel
+from .models import Struktur
+from .models import MonatsdatenTeams
+from datetime import datetime
+
 @api_view(['POST'])
 @csrf_exempt
 def login(request):
@@ -61,12 +68,6 @@ def build_tree(nodes, parent=None):
         }
         tree.append(child_data)
     return tree
-
-# views.py
-from django.http import JsonResponse
-from django.db import connection
-from .models import teamschlüssel
-from .models import Struktur
 
 def build_tree(struktur_data):
     # Create dictionary for quick lookup
@@ -126,6 +127,23 @@ def build_tree_with_null(request):
     #return JsonResponse(build_tree(data))
     return JsonResponse(list(data), safe=False)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def monatspflege_daten(request):
+    target_date = datetime(
+        request.data.get('year'),
+        request.data.get('month'),
+        request.data.get('day')
+    )
+    try:
+        print("hi")
+        monthly_data = MonatsdatenTeams.objects.filter(jahr_und_monat=target_date).order_by('primaerteam_id')
+        return JsonResponse(list(monthly_data.values()), safe=False)
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to fetch teams: {str(e)}'}, 
+            status=500
+        )
 
 class PrimaryListView(APIView):
     def get(self, request):
@@ -144,6 +162,7 @@ class PrimaryListView(APIView):
                 status=500
             )
 
+
 class TeamListView(APIView):
     def get(self, request):
         try:
@@ -161,6 +180,7 @@ class TeamListView(APIView):
                 {'error': f'Failed to fetch teams: {str(e)}'}, 
                 status=500
             )
+
 
 class EmployeeListView(APIView):
     def get(self, request):

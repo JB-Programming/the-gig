@@ -10,6 +10,7 @@ urlpatterns = [
     path('add_instance/', views.create_instance, name='create_instance'),
     path('structure/', views.build_tree_with_null, name='structure'),
     path('primary/', views.PrimaryListView.as_view(), name='primary-list'),
+    path('monthly/', views.monatspflege_daten, name='monthly-list'),
     path('teams/', TeamListView.as_view(), name='team-list'),
     path('employees/', EmployeeListView.as_view(), name='employee-list'),
     path('user/', UserInfoView.as_view(), name='user-info'),
