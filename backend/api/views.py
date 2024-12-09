@@ -129,6 +129,49 @@ def build_tree_with_null(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def monatspflege_speichern(request):
+    try:
+        with transaction.atomic():
+            x = 0
+            data = request.data.get('data')
+            date = request.data.get('date')
+            for entry in data:
+                print(entry)
+                target_date = datetime(
+                    int(date.split('-')[0]),
+                    int(date.split('-')[1]),
+                    1
+                )
+                print(target_date)
+                print(type(int(entry['revenue'])))
+                print(type(entry['dbPercent']))
+                print(type(entry['teamAdjustment']))
+                MonatsdatenTeams.objects.update_or_create(
+                    jahr_und_monat = target_date,
+                    primaerteam_id = x+1,
+                    umsatz =  int(entry['revenue']),
+                    db_ist = float(entry['dbPercent']),
+                    teamanpassung = int(entry['teamAdjustment'])
+                )
+                x = x + 1
+                """
+                    MonatsdatenTeams.objects.create(
+                    primaerteam_id=entry['primaerteam_id'],
+                    team_id=entry['team_id'],
+                    jahr_und_monat=entry['jahr_und_monat'],
+                    monat=entry['monat'],
+                    jahr=entry['jahr'],
+                    monat_name=entry
+                """
+        return Response({'success': True})
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to fetch teams: {str(e)}'}, 
+            status=500
+        )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def monatspflege_daten(request):
     target_date = datetime(
         request.data.get('year'),
@@ -136,7 +179,6 @@ def monatspflege_daten(request):
         request.data.get('day')
     )
     try:
-        print("hi")
         monthly_data = MonatsdatenTeams.objects.filter(jahr_und_monat=target_date).order_by('primaerteam_id')
         return JsonResponse(list(monthly_data.values()), safe=False)
     except Exception as e:

@@ -70,6 +70,7 @@ class Employee(models.Model):
 
     class Meta:
         db_table = 'mitarbeiter_stammdaten'
+        managed = False
 
 class Folder(models.Model):
     bezeichnung = models.TextField()
@@ -77,6 +78,7 @@ class Folder(models.Model):
 
     class Meta:
         db_table = 'ordner_stammdaten'
+        managed = False
 
 class Primary(models.Model):
     bezeichnung = models.TextField()
@@ -85,6 +87,7 @@ class Primary(models.Model):
 
     class Meta:
         db_table = 'primärteam_stammdaten'
+        managed = False
 
 class Team(models.Model):
     bezeichnung = models.TextField()
@@ -99,8 +102,8 @@ class Team(models.Model):
 class MonatsdatenTeams(models.Model):
     jahr_und_monat = models.DateField(primary_key=True)
     primaerteam_id = models.IntegerField(null = False, blank = False)
-    umsatz_plan = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    umsatz = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    umsatz_plan = models.IntegerField(null=True, blank=True)
+    umsatz = models.IntegerField(null=True, blank=True)
     db_plan = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True)
     db_ist = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True)
     teamanpassung = models.IntegerField(null=True, blank=True)

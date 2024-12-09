@@ -30,40 +30,35 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
         `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
       );
       
+    const fetchEntities = async () => {
+        try {
+          const response = await axios.get('http://localhost:8000/api/primary/');
+          const initialData = response.data.teams.map((team, index) => ({
+            entity: team,
+            revenue: data[index]?.revenue || '0',
+            dbPercent: data[index]?.dbPercent || '0,0000%',
+            db: data[index]?.db || '',
+            teamAdjustment: data[index]?.teamAdjustment || '0'
+        }));
+            return initialData;  
+        } catch (error) {
+          console.log('Error fetching entities:', error);
+        }
+    };
+
+    
 
     useEffect(() => {
-        console.log(data)
-        const fetchEntities = async () => {
-          try {
-            const response = await axios.get('http://localhost:8000/api/primary/');
-            const initialData = response.data.teams.map(team => ({
-              entity: team,
-              revenue: '',
-              dbPercent: '',
-              db: '',
-              teamAdjustment: '0'
-            }));
-            
-            setData(initialData);
-            console.log("3 2 1 "+initialData)
-            console.log('Loaded data:', initialData);
-          } catch (error) {
-            console.log('Error fetching entities:', error);
-          }
-        };
-      
-        fetchEntities();
+        fetchEntities().then(result => {
+            setData(result)
+        });
       }, []);
-
+    
     useEffect(() => {
-        console.log('selectedMonth changed to:', selectedMonth);
         const fetchMonthlyData = async (selectedMonth) => {
             const token = localStorage.getItem('token');
             try{
-                console.log(selectedMonth.split('-'));
                 const [year, month] = selectedMonth.split('-');
-                console.log(year)
-                console.log(month)
                 const response = await axios.post('http://localhost:8000/api/monthly/', {
                     year: parseInt(year),
                     month: parseInt(month),
@@ -74,30 +69,31 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
                         'Content-Type': 'application/json'
                     }
                 });
-                if(response.data != null){
-                    console.log('Response data:', response.data);
-                    console.log("HIT"+ data[0])
-                    const mappedData = response.data.map((item, index) => ({
-                        entity: data[index-1]?.entity || '',  // Keep existing entity name
-                        revenue: item.umsatz,
-                        dbPercent: item.db_ist,
-                        db: ((parseFloat(item.umsatz) * parseFloat(item.db_ist)) / 100).toString(),
-                        teamAdjustment: item.teamanpassung.toString()
-                    }));
-                                    
-                setData(mappedData);
-                }
-                console.log('Response data:', response.data);
-                console.log("HIT"+ data[0])
-                const mappedData = response.data.map((item, index) => ({
-                    entity: data[index-1].entity,  // Keep existing entity name
-                    revenue: item.umsatz,
-                    dbPercent: item.db_ist,
-                    db: ((parseFloat(item.umsatz) * parseFloat(item.db_ist)) / 100).toString(),
-                    teamAdjustment: item.teamanpassung.toString()
-                  }));
-                                    
-                setData(mappedData);
+                fetchEntities().then(result => {
+                    if(response.data != null && response.data.length > 0){
+                        var mappedData = response.data.map((item, index) => ({
+                            entity: result[index]?.entity,  // Keep existing entity name
+                            revenue: formatNumber(item.umsatz),
+                            dbPercent: formatPercentage((item.db_ist)),
+                            db: formatNumber(Math.round((item.umsatz*(item.db_ist/100)),0).toString()),
+                            teamAdjustment: item.teamanpassung.toString()
+                        }));
+                    
+                        if (mappedData && mappedData.length > 0) {
+                            setData(mappedData);
+                        }
+                    } 
+                    else {
+                        const resetData = result.map(item => ({
+                            entity: item.entity,
+                            revenue: '0',
+                            dbPercent: '0,0000%',
+                            db: '',
+                            teamAdjustment: '0'
+                        }));
+                        setData(resetData);
+                    }
+                })
             } catch (error) {
                 console.log('Error fetching entities:', error);
             }
@@ -105,17 +101,32 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
         fetchMonthlyData(selectedMonth);
     }, [selectedMonth]);
 
-    const handleSave = () => {
-        const formattedData = data.map(row => ({
+    const handleSave = async () => {
+        const token = localStorage.getItem('token');
+        const data1 = data.map(row => ({
           entity: row.entity,
           revenue: stripFormatting(row.revenue),
-          dbPercent: stripPercentage(row.dbPercent),
+          dbPercent: stripPercentage(row.dbPercent).replace(',','.'),
           db: stripFormatting(row.db),
           teamAdjustment: row.teamAdjustment
         }));
-      
-        console.log('Saved Data:', formattedData);
-        // Here you can send the data to your backend
+        const [year, month] = selectedMonth.split('-');
+        const data2 = {
+            date: `${year}-${month}-01`,
+            data: data1
+        };
+
+        try {
+            const response = await axios.post('http://localhost:8000/api/monthly_save/', data2, {
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            console.log('Data saved successfully:', response.data);
+        } catch (error) {
+            console.log('Error saving data:', error);
+        }
     };
 
     const handleFileUpload = (event) => {
@@ -139,9 +150,16 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
     };
     
     const formatPercentage = (num) => {
+        var parts
+        const hasComma = str => str.includes(',');
         if (!num) return '0,0000%';
         
-        let parts = num.split(',');
+        if (hasComma(num)) {
+            parts = num.split(',');
+        } else {
+            parts = num.split('.');
+        }
+
         if (!parts[1]) {
           parts[1] = '0000';
         } else {
