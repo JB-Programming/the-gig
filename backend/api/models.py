@@ -110,7 +110,22 @@ class MonatsdatenTeams(models.Model):
 
     class Meta:
         db_table = 'monatsdaten_teams'
-        unique_together = ('jahr_und_monat', 'primaerteam_id')
+        #unique_together = ('jahr_und_monat', 'primaerteam_id')
         constraints = [
             models.UniqueConstraint(fields=['jahr_und_monat', 'primaerteam_id'], name='monatsdaten_teams_pk')
+        ]
+
+class MonatsdatenPersonen(models.Model):
+    jahr_und_monat = models.DateField(primary_key=True)
+    mitarbeiter_id = models.IntegerField(null = False, blank = False)
+    festbetrag = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True)
+    fixum = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True)
+    fehltage = models.IntegerField(null=True, blank=True)
+    teiler = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'monatsdaten_personen'
+        #unique_together = ('jahr_und_monat', 'mitarbeiter_id')
+        constraints = [
+            models.UniqueConstraint(fields=['jahr_und_monat', 'mitarbeiter_id'], name='monatsdaten_personen_pk')
         ]

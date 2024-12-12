@@ -47,7 +47,7 @@ const Structure = ({ setIsLoggedIn }) => {
 
   const fetchTreeData = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/structure/');
+      const response = await axios.get('http://localhost:8000/api/get_structure/');
       var data = response.data;
       data = extractUniqueObjects(data);
       console.log(data);
@@ -141,7 +141,7 @@ const handleNewClick = () => {
 };
 
   const handleRowClick = (entity) => {
-    
+    fetchTreeData()
     var relatedItems = [];
     let preCheckedItems;
     let parentIds;

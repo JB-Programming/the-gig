@@ -22,8 +22,10 @@ from django.http import JsonResponse
 from django.db import connection
 from .models import teamschlüssel
 from .models import Struktur
-from .models import MonatsdatenTeams
+from .models import MonatsdatenTeams, MonatsdatenPersonen
 from datetime import datetime
+import copy
+from decimal import Decimal
 
 @api_view(['POST'])
 @csrf_exempt
@@ -132,41 +134,61 @@ def build_tree_with_null(request):
 def monatspflege_speichern(request):
     try:
         with transaction.atomic():
-            x = 0
-            data = request.data.get('data')
+            x = 1
+            team_data = request.data.get('data')
             date = request.data.get('date')
-            for entry in data:
-                print(entry)
-                target_date = datetime(
+            person_data = request.data.get('data2')
+            
+            target_date = datetime(
                     int(date.split('-')[0]),
                     int(date.split('-')[1]),
                     1
                 )
-                print(target_date)
-                print(type(int(entry['revenue'])))
-                print(type(entry['dbPercent']))
-                print(type(entry['teamAdjustment']))
-                MonatsdatenTeams.objects.update_or_create(
-                    jahr_und_monat = target_date,
-                    primaerteam_id = x+1,
-                    umsatz =  int(entry['revenue']),
-                    db_ist = float(entry['dbPercent']),
-                    teamanpassung = int(entry['teamAdjustment'])
+
+            # Delete existing entries for this date
+            try:
+                MonatsdatenTeams.objects.filter(jahr_und_monat=target_date).delete()
+            except:
+                print("No teams data!")
+            
+            # Create new team entries
+            for team in team_data:
+                revenue = str(team['revenue']).replace('.', '').replace(',', '.')
+                db_percent = str(team['dbPercent']).replace(',', '.')
+                team_adjustment = str(team['teamAdjustment']).replace('.', '').replace(',', '.')
+                
+                revenue_val = int(float(revenue)) if revenue else 0
+                db_val = Decimal(db_percent) if db_percent else Decimal('0.0000')
+                adjustment_val = int(float(team_adjustment)) if team_adjustment else 0
+
+                MonatsdatenTeams.objects.create(
+                    jahr_und_monat=target_date,
+                    primaerteam_id=x,
+                    umsatz=revenue_val,
+                    db_ist=db_val,
+                    teamanpassung=adjustment_val
                 )
-                x = x + 1
-                """
-                    MonatsdatenTeams.objects.create(
-                    primaerteam_id=entry['primaerteam_id'],
-                    team_id=entry['team_id'],
-                    jahr_und_monat=entry['jahr_und_monat'],
-                    monat=entry['monat'],
-                    jahr=entry['jahr'],
-                    monat_name=entry
-                """
-        return Response({'success': True})
+                x += 1
+            try:
+                MonatsdatenPersonen.objects.filter(jahr_und_monat=target_date).delete()
+            except:
+                print("No person data!")
+
+            # Create new person entries
+            for person in person_data:
+                MonatsdatenPersonen.objects.create(
+                    jahr_und_monat=target_date,
+                    mitarbeiter_id=person['mitarbeiter_id'],
+                    festbetrag=float(person['festbetrag']),
+                    fixum=float(person['fixum']),
+                    fehltage=int(person['fehltage']),
+                    teiler=int(person['teiler'])
+                )
+
+            return Response({'success': True})
     except Exception as e:
         return Response(
-            {'error': f'Failed to fetch teams: {str(e)}'}, 
+            {str(e)},#{'error': f'Failed to fetch teams: {str(e)}'}, 
             status=500
         )
 
@@ -186,6 +208,8 @@ def monatspflege_daten(request):
             {'error': f'Failed to fetch teams: {str(e)}'}, 
             status=500
         )
+
+
 
 class PrimaryListView(APIView):
     def get(self, request):
@@ -342,12 +366,25 @@ def build_tree_with_null(request):
         }
         print(nodes[node.id])"""
     data = Struktur.objects.all().values('struktur_id', 'name', 'parent', 'primär_id', 'ordner_id', 'team_id', 'mitarbeiter_id')
-    data = build_tree(data)
+    data2 = copy.deepcopy(data)
+    for item in data2:
+        if item['parent'] and 1 in item['parent'] and item['mitarbeiter_id'] is not None:
+            print(f"Struktur ID: {item['struktur_id']}")
+            item['parent'].remove(1)
+
+    data = build_tree(data2)
         #print(node)
     #return JsonResponse(build_tree(data))
     return JsonResponse(list(data), safe=False)
 
-
+@api_view(['GET'])
+def structure(request):
+   
+    data = Struktur.objects.all().values('struktur_id', 'name', 'parent', 'primär_id', 'ordner_id', 'team_id', 'mitarbeiter_id')
+    data = build_tree(data)
+        #print(node)
+    #return JsonResponse(build_tree(data))
+    return JsonResponse(list(data), safe=False)
 
 class RelationRateThrottle(UserRateThrottle):
     rate = '100/hour'
@@ -484,3 +521,47 @@ def manage_relation(request):
     """else:
         return Response({'error': 'You do not have permission to perform this action'}, status=403)
     """
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_employees(request):
+    target_date = datetime(
+        request.data.get('year'),
+        request.data.get('month'),
+        request.data.get('day')
+    )
+    try:
+        employees = Struktur.objects.filter(
+            mitarbeiter_id__isnull=False,
+            parent__contains=[1]
+        ).values('name', 'mitarbeiter_id')
+        
+        formatted_data = []
+        for emp in employees:
+            monthly_entry = MonatsdatenPersonen.objects.filter(
+                jahr_und_monat=target_date,
+                mitarbeiter_id=emp['mitarbeiter_id']
+            ).values().first()
+            
+            if monthly_entry:
+                monthly_entry['name'] = emp['name']
+                monthly_entry['festbetrag'] = int(monthly_entry['festbetrag'])
+                monthly_entry['fixum'] = int(monthly_entry['fixum'])
+                formatted_data.append(monthly_entry)
+            else:
+                formatted_data.append({
+                    'name': emp['name'],
+                    'mitarbeiter_id': emp['mitarbeiter_id'],
+                    'festbetrag': 0,
+                    'fixum': 0,
+                    'fehltage': 0,
+                    'teiler': 1
+                })
+        
+
+        return JsonResponse(list(formatted_data), safe=False)
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to fetch teams: {str(e)}'}, 
+            status=500
+        )

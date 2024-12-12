@@ -29,6 +29,7 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
     const [selectedMonth, setSelectedMonth] = useState(
         `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
       );
+      const [employeeData, setEmployeeData] = useState([]);
       
     const fetchEntities = async () => {
         try {
@@ -52,6 +53,8 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
         fetchEntities().then(result => {
             setData(result)
         });
+        console.log('DataEmp:', employeeData);
+        console.log('Data:', data);
       }, []);
     
     useEffect(() => {
@@ -94,6 +97,31 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
                         setData(resetData);
                     }
                 })
+
+                const response2 = await axios.post('http://localhost:8000/api/monthly_employees/', {
+                    year: parseInt(year),
+                    month: parseInt(month),
+                    day: 1
+                }, {
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if(response2.data != null && response2.data.length > 0){
+                    var mappedData = response2.data.map((item, index) => ({
+                        mitarbeiter_id: item.mitarbeiter_id,  // Keep existing entity name
+                        festbetrag: formatNumber(item.festbetrag),
+                        fixum: formatNumber(item.fixum),
+                        fehltage: formatNumber(item.fehltage),
+                        teiler: formatNumber(item.teiler),
+                        name: item.name
+                    }));
+                
+                    if (mappedData && mappedData.length > 0) {
+                        setEmployeeData(mappedData);
+                    }
+                }
             } catch (error) {
                 console.log('Error fetching entities:', error);
             }
@@ -110,10 +138,19 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
           db: stripFormatting(row.db),
           teamAdjustment: row.teamAdjustment
         }));
+        const data3 = employeeData.map(row => ({
+            mitarbeiter_id: row.mitarbeiter_id,
+            festbetrag: stripFormatting(row.festbetrag),
+            fixum: stripFormatting(row.fixum),
+            fehltage: stripFormatting(row.fehltage),
+            teiler: stripFormatting(row.teiler),
+            name: row.name
+          }));
         const [year, month] = selectedMonth.split('-');
         const data2 = {
             date: `${year}-${month}-01`,
-            data: data1
+            data: data1,
+            data2: data3
         };
 
         try {
@@ -186,51 +223,73 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
     };
     
     const handleInputChange = (index, field, value) => {
-        const newData = [...data];
-        
-        if (field === 'dbPercent') {
-          const commaCount = (value.match(/,/g) || []).length;
-          if (commaCount > 1) return;
-          const numericValue = value.replace(/[^\d,]/g, '');
-          newData[index][field] = numericValue;
+        if (field === "revenue" || field === "dbPercent" || field === "teamAdjustment") {
+            const newData = [...data];
+            if (field === 'dbPercent') {
+                const commaCount = (value.match(/,/g) || []).length;
+                if (commaCount > 1) return;
+                const numericValue = value.replace(/[^\d,]/g, '');
+                newData[index][field] = numericValue;
+            } else {
+                const numericValue = value.replace(/[^\d]/g, '');
+                newData[index][field] = numericValue;
+            }
+            newData[index].db = calculateDB(newData[index].revenue, newData[index].dbPercent);
+            setData(newData);
         } else {
-          const numericValue = value.replace(/[^\d]/g, '');
-          newData[index][field] = numericValue;
+            const newEmployeeData = [...employeeData];
+            const numericValue = value.replace(/[^\d]/g, '');
+            newEmployeeData[index][field] = numericValue;
+            setEmployeeData(newEmployeeData);
         }
-        
-        // Calculate DB after input change
-        newData[index].db = calculateDB(newData[index].revenue, newData[index].dbPercent);
-        
-        setData(newData);
     };
     
     const handleInputBlur = (index, field) => {
-        const newData = [...data];
-        if (field === 'dbPercent') {
-          let value = newData[index][field];
-          // Remove leading zeros before comma
-          value = value.replace(/^0+(?=\d)/, '');
-          if (!value) value = '0';
-          newData[index][field] = formatPercentage(value);
+        if (field === "revenue" || field === "dbPercent" || field === "teamAdjustment") {
+            const newData = [...data];
+            if (field === 'dbPercent') {
+                let value = newData[index][field];
+                value = value.replace(/^0+(?=\d)/, '');
+                if (!value) value = '0';
+                newData[index][field] = formatPercentage(value);
+            } else {
+                let value = newData[index][field];
+                value = value.replace(/^0+(?=\d)/, '');
+                if (!value) value = '0';
+                newData[index][field] = formatNumber(value);
+            }
+            setData(newData);
         } else {
-          let value = newData[index][field];
-          // Remove leading zeros
-          value = value.replace(/^0+(?=\d)/, '');
-          if (!value) value = '0';
-          newData[index][field] = formatNumber(value);
+            const newEmployeeData = [...employeeData];
+            let value = newEmployeeData[index][field];
+            value = value.replace(/^0+(?=\d)/, '');
+            if (!value) value = '0';
+            newEmployeeData[index][field] = formatNumber(value);
+            setEmployeeData(newEmployeeData);
         }
-        setData(newData);
     };
     
+    
     const handleInputFocus = (index, field) => {
-    const newData = [...data];
-    if (field === 'dbPercent') {
-        newData[index][field] = stripPercentage(newData[index][field]);
-    } else {
-        newData[index][field] = stripFormatting(newData[index][field]);
-    }
-    setData(newData);
-    };
+        var newData
+        if (field === "revenue" || field === "dbPercent" || field === "teamAdjustment") {
+            newData = [...data];
+        }
+        else {
+            newData = [...employeeData];
+        }
+        if (field === 'dbPercent') {
+            newData[index][field] = stripPercentage(newData[index][field]);
+        } else {
+            newData[index][field] = stripFormatting(newData[index][field]);
+        }
+        if (field === "revenue" || field === "dbPercent" || field === "teamAdjustment") {
+            setData(newData);
+        }
+        else {
+            setEmployeeData(newData);
+        }
+        };
 
     const calculateRevenueSum = () => {
         return data.reduce((sum, row) => {
@@ -289,6 +348,33 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
         return options;
       };
 
+      const calculateBetragSum = () => {
+        return formatNumber(employeeData.reduce((sum, row) => {
+            const value = stripFormatting(row.festbetrag);
+            return sum + (parseInt(value) || 0);
+          }, 0))
+    };
+    
+    const calculateFixumSum = () => {
+        return formatNumber(employeeData.reduce((sum, row) => {
+            const value = stripFormatting(row.fixum);
+            return sum + (parseInt(value) || 0);
+          }, 0))
+    };
+    
+    const calculateFehltageSum = () => {
+        return formatNumber(employeeData.reduce((sum, row) => {
+            const value = stripFormatting(row.fehltage);
+            return sum + (parseInt(value) || 0);
+          }, 0))
+    };
+    
+    const calculateTeilerAverage = () => {
+        const validTeiler = employeeData.filter(row => row.teiler);
+        const sum = validTeiler.reduce((sum, row) => sum + parseFloat(row.teiler), 0);
+        return validTeiler.length ? (sum / validTeiler.length).toFixed(2) : '0.00';
+    };
+
       const handleDateChange = (e) => {
         const date = e.target.value;
         console.log(date)
@@ -338,102 +424,202 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
 
         {/* Tabelle */}
         <TableContainer component={Paper}>
-  <Table>
-    <TableHead>
-      <TableRow sx={{ backgroundColor: 'primary.light' }}>
-        <TableCell width="20%">Entität</TableCell>
-        <TableCell width="20%">Umsatz</TableCell>
-        <TableCell width="20%">DB IST in %</TableCell>
-        <TableCell width="20%">DB</TableCell>
-        <TableCell width="20%">Teamanpassung</TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {data.map((row, index) => (
-        <TableRow key={index}>
-          <TableCell width="20%">{row.entity}</TableCell>
-          <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
-            <input 
-              type="text" 
-              value={row.revenue} 
-              onChange={(e) => handleInputChange(index, 'revenue', e.target.value)}
-              onBlur={() => handleInputBlur(index, 'revenue')}
-              onFocus={() => handleInputFocus(index, 'revenue')}
-              style={{ 
-                width: '100%-16px', 
-                border: 'none', 
-                backgroundColor: 'transparent', 
-                padding: '8px',
-                outline: 'none',
-                textAlign: 'right'
-              }}
-            />
-          </TableCell>
-          <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
-            <input 
-              type="text" 
-              value={row.dbPercent} 
-              onChange={(e) => handleInputChange(index, 'dbPercent', e.target.value)}
-              onBlur={() => handleInputBlur(index, 'dbPercent')}
-              onFocus={() => handleInputFocus(index, 'dbPercent')}
-              style={{ 
-                width: '100%-16px', 
-                border: 'none', 
-                backgroundColor: 'transparent', 
-                padding: '8px',
-                outline: 'none',
-                textAlign: 'right'
-              }}
-            />
-          </TableCell>
-          <TableCell width="20%" sx={{ backgroundColor: '#e3f2fd', padding: '12px' }}>{row.db}</TableCell>
-          <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
-            <input 
-              type="text" 
-              value={row.teamAdjustment} 
-              onChange={(e) => handleInputChange(index, 'teamAdjustment', e.target.value)}
-              style={{ 
-                width: '100%-16px', 
-                border: 'none', 
-                backgroundColor: 'transparent', 
-                padding: '8px',
-                outline: 'none',
-                textAlign: 'right'
-              }}
-            />
-          </TableCell>
-        </TableRow>
-      ))}
-      {/* Sum row */}
-        <TableRow>
-            <TableCell sx={{ backgroundColor: '#bcbcbc' }}>Summe</TableCell>
-            <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
-            {formatNumber(calculateRevenueSum())}
-            </TableCell>
-            <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
-            {calculateAverageDBPercent()}
-            </TableCell>
-            <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
-            {formatNumber(calculateDBSum())}
-            </TableCell>
-            <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
-            {formatNumber(calculateTeamAdjustmentSum())}
-            </TableCell>
-        </TableRow>
-    </TableBody>
-  </Table>
-</TableContainer>
+            <Table sx={{
+                /*'& th,'*/ '& td': {
+                    border: '1px solid #e0e0e0'
+                }
+            }}>
+                <TableHead>
+                <TableRow sx={{ backgroundColor: 'primary.light' }}>
+                    <TableCell width="20%">Entität</TableCell>
+                    <TableCell width="20%">Umsatz</TableCell>
+                    <TableCell width="20%">DB IST in %</TableCell>
+                    <TableCell width="20%">DB</TableCell>
+                    <TableCell width="20%">Teamanpassung</TableCell>
+                </TableRow>
+                </TableHead>
+                <TableBody>
+                {data.map((row, index) => (
+                    <TableRow key={index}>
+                    <TableCell width="20%">{row.entity}</TableCell>
+                    <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
+                        <input 
+                        type="text" 
+                        value={row.revenue} 
+                        onChange={(e) => handleInputChange(index, 'revenue', e.target.value)}
+                        onBlur={() => handleInputBlur(index, 'revenue')}
+                        onFocus={() => handleInputFocus(index, 'revenue')}
+                        style={{ 
+                            width: '100%-16px', 
+                            border: 'none', 
+                            backgroundColor: 'transparent', 
+                            padding: '8px',
+                            outline: 'none',
+                            textAlign: 'right'
+                        }}
+                        />
+                    </TableCell>
+                    <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
+                        <input 
+                        type="text" 
+                        value={row.dbPercent} 
+                        onChange={(e) => handleInputChange(index, 'dbPercent', e.target.value)}
+                        onBlur={() => handleInputBlur(index, 'dbPercent')}
+                        onFocus={() => handleInputFocus(index, 'dbPercent')}
+                        style={{ 
+                            width: '100%-16px', 
+                            border: 'none', 
+                            backgroundColor: 'transparent', 
+                            padding: '8px',
+                            outline: 'none',
+                            textAlign: 'right'
+                        }}
+                        />
+                    </TableCell>
+                    <TableCell width="20%" sx={{ backgroundColor: '#e3f2fd', padding: '12px' }}>{row.db}</TableCell>
+                    <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
+                        <input 
+                        type="text" 
+                        value={row.teamAdjustment} 
+                        onChange={(e) => handleInputChange(index, 'teamAdjustment', e.target.value)}
+                        style={{ 
+                            width: '100%-16px', 
+                            border: 'none', 
+                            backgroundColor: 'transparent', 
+                            padding: '8px',
+                            outline: 'none',
+                            textAlign: 'right'
+                        }}
+                        />
+                    </TableCell>
+                    </TableRow>
+                ))}
+                {/* Sum row */}
+                    <TableRow>
+                        <TableCell sx={{ backgroundColor: '#bcbcbc' }}>Summe</TableCell>
+                        <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
+                        {formatNumber(calculateRevenueSum())}
+                        </TableCell>
+                        <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
+                        {calculateAverageDBPercent()}
+                        </TableCell>
+                        <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
+                        {formatNumber(calculateDBSum())}
+                        </TableCell>
+                        <TableCell sx={{ backgroundColor: '#bcbcbc', textAlign: 'right' }}>
+                        {formatNumber(calculateTeamAdjustmentSum())}
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </TableContainer>
 
-
-
-
-
-
-        {/* Pagination */}
+        {/* Pagination  
         <div style={{ marginTop: "20px", textAlign: "center" }}>
         <button style={{ marginRight: "10px" }}>Zurück</button>
         <button>Nächste</button>
-        </div>
+        </div>*/}
+        <div style={{ marginTop: "20px", textAlign: "center" }}></div>
+        <div style={{ marginTop: "20px", textAlign: "center" }}></div>
+        <TableContainer component={Paper}>
+            <Table sx={{
+                /*'& th,'*/ '& td': {
+                    border: '1px solid #e0e0e0'
+                }
+            }}>
+                <TableHead>
+                <TableRow sx={{ backgroundColor: 'primary.light' }}>
+                    <TableCell width="20%">Name</TableCell>
+                    <TableCell width="20%">Festbetrag</TableCell>
+                    <TableCell width="20%">Fixum</TableCell>
+                    <TableCell width="20%">Fehltage</TableCell>
+                    <TableCell width="20%">Teiler</TableCell>
+                </TableRow>
+                </TableHead>
+                <TableBody>
+                {employeeData.map((row, index) => (
+                    <TableRow key={index}>
+                        <TableCell width="20%" style={{ minWidth: '185px'}}>{row.name}</TableCell>
+                        <TableCell width="20%">
+                            <input 
+                            type="text" 
+                            value={row.festbetrag} 
+                            onChange={(e) => handleInputChange(index, 'festbetrag', e.target.value)}
+                            onBlur={() => handleInputBlur(index, 'festbetrag')}
+                            onFocus={() => handleInputFocus(index, 'festbetrag')}
+                            style={{ 
+                                width: '100%-16px', 
+                                border: 'none', 
+                                backgroundColor: 'transparent', 
+                                padding: '8px',
+                                outline: 'none',
+                                textAlign: 'right'
+                            }}
+                            />
+                        </TableCell>
+                        <TableCell width="20%">
+                            <input 
+                            type="text" 
+                            value={row.fixum} 
+                            onChange={(e) => handleInputChange(index, 'fixum', e.target.value)}
+                            onBlur={() => handleInputBlur(index, 'fixum')}
+                            onFocus={() => handleInputFocus(index, 'fixum')}
+                            style={{ 
+                                width: '100%-16px', 
+                                border: 'none', 
+                                backgroundColor: 'transparent', 
+                                padding: '8px',
+                                outline: 'none',
+                                textAlign: 'right'
+                            }}
+                            />
+                        </TableCell>
+                        <TableCell width="20%">
+                            <input 
+                            type="text" 
+                            value={row.fehltage} 
+                            onChange={(e) => handleInputChange(index, 'fehltage', e.target.value)}
+                            onBlur={() => handleInputBlur(index, 'fehltage')}
+                            onFocus={() => handleInputFocus(index, 'fehltage')}
+                            style={{ 
+                                width: '100%-16px', 
+                                border: 'none', 
+                                backgroundColor: 'transparent', 
+                                padding: '8px',
+                                outline: 'none',
+                                textAlign: 'right'
+                            }}
+                            />
+                        </TableCell>
+                        <TableCell width="20%">
+                            <input 
+                            type="text" 
+                            value={row.teiler.toString()} 
+                            onChange={(e) => handleInputChange(index, 'teiler', e.target.value)}
+                            onBlur={() => handleInputBlur(index, 'teiler')}
+                            onFocus={() => handleInputFocus(index, 'teiler')}
+                            style={{ 
+                                width: '100%-16px', 
+                                border: 'none', 
+                                backgroundColor: 'transparent', 
+                                padding: '8px',
+                                outline: 'none',
+                                textAlign: 'right'
+                            }}
+                            />
+                        </TableCell>
+                    </TableRow>
+                ))}
+                <TableRow sx={{ backgroundColor: '#bcbcbc' }}>
+                    <TableCell width="20%">Summe</TableCell>
+                    <TableCell width="20%">{calculateBetragSum()}</TableCell>
+                    <TableCell width="20%">{calculateFixumSum()}</TableCell>
+                    <TableCell width="20%">{calculateFehltageSum()}</TableCell>
+                    <TableCell width="20%">{calculateTeilerAverage()}</TableCell>
+                </TableRow>
+                </TableBody>
+            </Table>
+        </TableContainer>
     </div>
     );
 };
