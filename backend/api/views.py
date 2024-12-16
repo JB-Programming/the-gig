@@ -565,3 +565,192 @@ def get_employees(request):
             {'error': f'Failed to fetch teams: {str(e)}'}, 
             status=500
         )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_primary_data_top(request):
+        bezeichnung = request.data.get('team')
+        try:
+            
+            struktur = Struktur.objects.get(name=bezeichnung)
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT *
+                    FROM primärteam_stammdaten 
+                    WHERE id = %s 
+                """, [struktur.primär_id])
+
+                row = cursor.fetchone()
+                print(row)
+
+                if row:
+                    return Response({
+                        'primär_id': row[0],
+                        'bezeichnung': row[1],
+                        'sortierfeld': row[2], 
+                        'notiz': row[3]
+                    })
+                else:
+                    return Response({
+                        'primär_id': 0,
+                        'bezeichnung': 0,
+                        'sortierfeld': 0, 
+                        'notiz': 0
+
+                })
+        except Struktur.DoesNotExist:
+            return Response({'error': 'Team not found'}, status=404)
+        
+        except Exception as e:
+            return Response({'error': f'Failed to fetch primary data: {str(e)}'}, status=500)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_primary_data(request):
+        bezeichnung = request.data.get('team')
+        jahr = request.data.get('year')
+        try:
+            struktur = Struktur.objects.get(name=bezeichnung)
+
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT *
+                    FROM primärteam_stammdaten_jahr 
+                    WHERE id = %s AND jahr = %s
+                """, [struktur.primär_id, jahr])
+
+                row = cursor.fetchone()
+                print(row)
+
+                if row:
+                    return Response({
+                        'primär_id': row[1],
+                        'plan_db': row[2],
+                        'teamanpassung': row[3], 
+                        'db_beteiligung': row[4],
+                        'umsatz_beteiligung': row[5],
+                        'schwellwert_db': row[6],
+                        'januar': row[7],
+                        'februar': row[8],
+                        'maerz': row[9],
+                        'april': row[10],
+                        'mai': row[11],
+                        'juni': row[12],
+                        'juli': row[13],
+                        'august': row[14],
+                        'september': row[15],
+                        'oktober': row[16],
+                        'november': row[17],
+                        'dezember': row[18]
+                    })
+                else:
+                    return Response({
+                        'primär_id': struktur.primär_id,
+                        'plan_db': 0,
+                        'teamanpassung': 0, 
+                        'db_beteiligung': 0,
+                        'umsatz_beteiligung': 0,
+                        'schwellwert_db': 0,
+                        'januar': 0,
+                        'februar': 0,
+                        'maerz': 0,
+                        'april': 0,
+                        'mai': 0,
+                        'juni': 0,
+                        'juli': 0,
+                        'august': 0,
+                        'september': 0,
+                        'oktober': 0,
+                        'november': 0,
+                        'dezember': 0
+                    })
+
+            return Response({
+                'primär_id': struktur.primär_id
+            })
+
+            return Response({'teams': teams})
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to fetch teams: {str(e)}'}, 
+                status=500
+            )
+        
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_schwellenwerte(request):
+    try:
+        with transaction.atomic():
+            combinedData = request.data.get('combinedData')
+            
+            """
+            # Process the data here
+            # Example: Save to database or perform calculations
+
+            print(f"Plan DB: {combinedData["planDB"]}")
+            print(f"Teamanpassung: {combinedData["teamanpassung"]}")
+            print(f"DB Beteiligung: {combinedData["dbBeteiligung"]}")
+            print(f"Schwellwert DB: {combinedData["schwellwertDB"]}")
+            print(f"Primär ID: {combinedData["primär_id"]}")
+            print(combinedData["monthlyData"])
+            for month in combinedData["monthlyData"]:
+                print(f"Month: {month["anteile"]}")
+            print(combinedData["year"])
+
+            return Response({'success': True})"""
+
+
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO primärteam_stammdaten_jahr (
+                        jahr, id, plan_deckungsbeitrag, teamanpassung, 
+                        teambeteiligung_deckungsbeitrag, teambeteiligung_umsatz, 
+                        schwellenwert_db, jan_anteile, feb_anteile, mar_anteile,
+                        apr_anteile, mai_anteile, jun_anteile, jul_anteile,
+                        aug_anteile, sep_anteile, okt_anteile, nov_anteile, dez_anteile
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    )
+                    ON DUPLICATE KEY UPDATE
+                        plan_deckungsbeitrag = VALUES(plan_deckungsbeitrag),
+                        teamanpassung = VALUES(teamanpassung),
+                        teambeteiligung_deckungsbeitrag = VALUES(teambeteiligung_deckungsbeitrag),
+                        teambeteiligung_umsatz = VALUES(teambeteiligung_umsatz),
+                        schwellenwert_db = VALUES(schwellenwert_db),
+                        jan_anteile = VALUES(jan_anteile),
+                        feb_anteile = VALUES(feb_anteile),
+                        mar_anteile = VALUES(mar_anteile),
+                        apr_anteile = VALUES(apr_anteile),
+                        mai_anteile = VALUES(mai_anteile),
+                        jun_anteile = VALUES(jun_anteile),
+                        jul_anteile = VALUES(jul_anteile),
+                        aug_anteile = VALUES(aug_anteile),
+                        sep_anteile = VALUES(sep_anteile),
+                        okt_anteile = VALUES(okt_anteile),
+                        nov_anteile = VALUES(nov_anteile),
+                        dez_anteile = VALUES(dez_anteile)
+                """, [
+                    combinedData['year'],
+                    combinedData['primär_id'],
+                    combinedData['planDB'],
+                    combinedData['teamanpassung'],
+                    combinedData['dbBeteiligung'],
+                    0,
+                    combinedData['schwellwertDB'],
+                    combinedData['monthlyData'][0]['anteile'],
+                    combinedData['monthlyData'][1]['anteile'],
+                    combinedData['monthlyData'][2]['anteile'],
+                    combinedData['monthlyData'][3]['anteile'],
+                    combinedData['monthlyData'][4]['anteile'],
+                    combinedData['monthlyData'][5]['anteile'],
+                    combinedData['monthlyData'][6]['anteile'],
+                    combinedData['monthlyData'][7]['anteile'],
+                    combinedData['monthlyData'][8]['anteile'],
+                    combinedData['monthlyData'][9]['anteile'],
+                    combinedData['monthlyData'][10]['anteile'],
+                    combinedData['monthlyData'][11]['anteile']
+                ])
+
+            return Response({'success': True})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)

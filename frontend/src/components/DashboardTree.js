@@ -184,11 +184,30 @@ export default DashboardTree;
 
 */
 
-const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setShowNavBar }) => {
+const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setNodeName, setNodeLevel, onNodeSelect }) => {
   const handleNodeClick = (node) => {
-      setShowNavBar(node.name);
-      console.log(node.name);
-    };
+    console.log(node);
+    setNodeName(node.name);
+    if (node["ordner_id"] != null) {
+      setNodeLevel(1);
+      console.log(1);
+    } else if (node["primär_id"] != null) {
+      setNodeLevel(2);
+      console.log(2);
+    } else if (node["team_id"] != null) {
+      setNodeLevel(3);
+      console.log(3);
+    } else if (node["mitarbeiter_id"] != null) {
+      setNodeLevel(4);
+      console.log(4);
+    } 
+    else {
+      setNodeLevel(0);
+      console.log(0);
+    }
+    console.log(node.name);
+    onNodeSelect(node);
+  };
 
   const [employees, setEmployees] = useState([]);
   const [treeData, setTreeData] = useState([]);

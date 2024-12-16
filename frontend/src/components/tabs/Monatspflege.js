@@ -450,12 +450,11 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
                         onBlur={() => handleInputBlur(index, 'revenue')}
                         onFocus={() => handleInputFocus(index, 'revenue')}
                         style={{ 
-                            width: '100%-16px', 
+                            width: '98%', 
                             border: 'none', 
-                            backgroundColor: 'transparent', 
-                            padding: '8px',
+                            backgroundColor: 'transparent',
                             outline: 'none',
-                            textAlign: 'right'
+                            textAlign: 'right',  
                         }}
                         />
                     </TableCell>
@@ -467,26 +466,31 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
                         onBlur={() => handleInputBlur(index, 'dbPercent')}
                         onFocus={() => handleInputFocus(index, 'dbPercent')}
                         style={{ 
-                            width: '100%-16px', 
+                            width: '98%', 
                             border: 'none', 
                             backgroundColor: 'transparent', 
-                            padding: '8px',
+                            //padding: '8px',
                             outline: 'none',
                             textAlign: 'right'
                         }}
                         />
                     </TableCell>
-                    <TableCell width="20%" sx={{ backgroundColor: '#e3f2fd', padding: '12px' }}>{row.db}</TableCell>
+                    <TableCell width="20%" sx={{ 
+                        backgroundColor: '#e3f2fd', 
+                        padding: '12px',
+                        textAlign: 'right'
+                        }}
+                        >{row.db}</TableCell>
                     <TableCell width="20%" sx={{ backgroundColor: '#fff3e0', padding: '4px' }}>
                         <input 
                         type="text" 
                         value={row.teamAdjustment} 
                         onChange={(e) => handleInputChange(index, 'teamAdjustment', e.target.value)}
                         style={{ 
-                            width: '100%-16px', 
+                            width: '98%', 
                             border: 'none', 
                             backgroundColor: 'transparent', 
-                            padding: '8px',
+                            //padding: '8px',
                             outline: 'none',
                             textAlign: 'right'
                         }}
@@ -539,7 +543,7 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
                 <TableBody>
                 {employeeData.map((row, index) => (
                     <TableRow key={index}>
-                        <TableCell width="20%" style={{ minWidth: '185px'}}>{row.name}</TableCell>
+                        <TableCell width="20%">{row.name}</TableCell>
                         <TableCell width="20%">
                             <input 
                             type="text" 
@@ -548,10 +552,10 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
                             onBlur={() => handleInputBlur(index, 'festbetrag')}
                             onFocus={() => handleInputFocus(index, 'festbetrag')}
                             style={{ 
-                                width: '100%-16px', 
+                                width: '98%', 
                                 border: 'none', 
                                 backgroundColor: 'transparent', 
-                                padding: '8px',
+                                //padding: '8px',
                                 outline: 'none',
                                 textAlign: 'right'
                             }}
@@ -565,10 +569,10 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
                             onBlur={() => handleInputBlur(index, 'fixum')}
                             onFocus={() => handleInputFocus(index, 'fixum')}
                             style={{ 
-                                width: '100%-16px', 
+                                width: '98%', 
                                 border: 'none', 
                                 backgroundColor: 'transparent', 
-                                padding: '8px',
+                                //padding: '8px',
                                 outline: 'none',
                                 textAlign: 'right'
                             }}
@@ -582,10 +586,10 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
                             onBlur={() => handleInputBlur(index, 'fehltage')}
                             onFocus={() => handleInputFocus(index, 'fehltage')}
                             style={{ 
-                                width: '100%-16px', 
+                                width: '98%', 
                                 border: 'none', 
                                 backgroundColor: 'transparent', 
-                                padding: '8px',
+                                //padding: '8px',
                                 outline: 'none',
                                 textAlign: 'right'
                             }}
@@ -599,10 +603,10 @@ const Monatspflege = ({ isAdmin = false, isSuperuser = false, userId, setShowNav
                             onBlur={() => handleInputBlur(index, 'teiler')}
                             onFocus={() => handleInputFocus(index, 'teiler')}
                             style={{ 
-                                width: '100%-16px', 
+                                width: '98%', 
                                 border: 'none', 
                                 backgroundColor: 'transparent', 
-                                padding: '8px',
+                                //padding: '8px',
                                 outline: 'none',
                                 textAlign: 'right'
                             }}

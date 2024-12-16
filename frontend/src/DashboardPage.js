@@ -6,12 +6,21 @@ import { Box, Paper, Typography, Avatar, AppBar, Toolbar, Button} from '@mui/mat
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Structure from './Structure';
 import Monatspflege from './components/tabs/Monatspflege';
+import Primärteam_Stamm from './components/tabs/Primärteam_Stamm';
 
 const DashboardPage = ({ setIsLoggedIn }) => {
 
   const [userData, setUserData] = useState(null);
-  const [showNavBar, setShowNavBar] = useState(null);
+  const [showNavBar, setShowNavBar] = useState(true);
+  const [nodeName, setNodeName] = useState(null);
+  const [nodeLevel, setNodeLevel] = useState(null);
   const [activeTab, setActiveTab] = useState('struktur');
+  const [selectedNode, setSelectedNode] = useState(null);
+
+  // Add this handler
+  const handleNodeSelect = (node) => {
+    setSelectedNode(node);
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -76,7 +85,9 @@ const DashboardPage = ({ setIsLoggedIn }) => {
             isAdmin={userData?.is_staff}
             isSuperuser={userData?.is_superuser}
             userId={userData?.id}
-            setShowNavBar={setShowNavBar}
+            setNodeName={setNodeName}
+            setNodeLevel={setNodeLevel}
+            onNodeSelect={handleNodeSelect}
           />
         </Box>
 
@@ -181,8 +192,9 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         
         {showNavBar && <Toolbar />}
         
-        {showNavBar == "Hillmann & Geitz" && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
-        {showNavBar === "Monatspflege" && <Monatspflege />}
+        {nodeName == "Hillmann & Geitz" && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
+        {nodeName === "Monatspflege" && <Monatspflege />}
+        {nodeLevel === 2 && <Primärteam_Stamm selectedNode={selectedNode}/>}
       </Box>
     </Box>
   );

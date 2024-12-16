@@ -18,4 +18,7 @@ urlpatterns = [
     path('employees/', EmployeeListView.as_view(), name='employee-list'),
     path('user/', UserInfoView.as_view(), name='user-info'),
     path('user-roles/', UserRolesView.as_view(), name='user-roles'),
+    path('primary_team_data/', views.get_primary_data, name='primary-data'),
+    path('primary_team_data_top/', views.get_primary_data_top, name='primary-data-top'),
+    path('save_schwellenwerte/', views.save_schwellenwerte, name='save-schwellenwerte')
 ]
