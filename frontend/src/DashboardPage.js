@@ -7,6 +7,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Structure from './Structure';
 import Monatspflege from './components/tabs/Monatspflege';
 import Primärteam_Stamm from './components/tabs/Primärteam_Stamm';
+import Primärteam_Pflege from './components/tabs/Primärteam_Pflege';
 
 const DashboardPage = ({ setIsLoggedIn }) => {
 
@@ -194,7 +195,8 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         
         {nodeName == "Hillmann & Geitz" && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
         {nodeName === "Monatspflege" && <Monatspflege />}
-        {nodeLevel === 2 && <Primärteam_Stamm selectedNode={selectedNode}/>}
+        {nodeLevel === 2 && nodeName !== "DB Kunden 03" && <Primärteam_Pflege selectedNode={selectedNode}/>}
+        {nodeName === "DB Kunden 03" && <Primärteam_Stamm selectedNode={selectedNode}/>}
       </Box>
     </Box>
   );

@@ -20,5 +20,7 @@ urlpatterns = [
     path('user-roles/', UserRolesView.as_view(), name='user-roles'),
     path('primary_team_data/', views.get_primary_data, name='primary-data'),
     path('primary_team_data_top/', views.get_primary_data_top, name='primary-data-top'),
-    path('save_schwellenwerte/', views.save_schwellenwerte, name='save-schwellenwerte')
+    path('save_schwellenwerte/', views.save_schwellenwerte, name='save-schwellenwerte'),
+    path('get_monthly_data/', views.get_monthly_data, name='get-monthly-data'),
+    path('save_monthly_data/', views.save_monthly_data, name='save-monthly-data'),
 ]

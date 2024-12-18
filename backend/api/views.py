@@ -754,3 +754,158 @@ def save_schwellenwerte(request):
             return Response({'success': True})
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_monthly_data(request):
+    try:
+        bezeichnung = request.data.get('team')
+        year = request.data.get('year')
+        monthly_data = []
+        monthly_data_schwellenwert = []
+        with connection.cursor() as cursor:
+            struktur = Struktur.objects.get(name=bezeichnung)
+            
+            
+            for month in range(1, 13):
+                target_date = datetime(
+                    int(year),
+                    month,
+                    1
+                )
+                cursor.execute("""
+                    SELECT umsatz_plan, umsatz, db_plan, db_ist
+                    FROM monatsdaten_teams 
+                    WHERE primaerteam_id = %s AND jahr_und_monat = %s
+                """, [struktur.primär_id, target_date])
+
+                row = cursor.fetchone()
+
+                if row:
+                    monthly_data.append({
+                        'umsatzPlan': row[0] or 0,
+                        'umsatzIst': row[1] or 0, 
+                        'dbPlanPercent': row[2] or 0,
+                        'dbIstPercent': row[3] or 0
+                    })
+                else:
+                    monthly_data.append({
+                        'umsatzPlan': 0,
+                        'umsatzIst': 0,
+                        'dbPlanPercent': 0,
+                        'dbIstPercent': 0
+                    })
+
+            cursor.execute("""
+                    SELECT *
+                    FROM primärteam_stammdaten_jahr 
+                    WHERE id = %s AND jahr = %s
+                """, [struktur.primär_id, year])
+
+            row = cursor.fetchone()
+            print(row)
+
+            if row:
+                schwellenwert_gesamt = float(row[6])
+                anteile_gesamt = row[7] + row[8] + row[9] + row[10] + row[11] + row[12] + row[13] + row[14] + row[15] + row[16] + row[17] + row[18]
+                print(anteile_gesamt)
+                if anteile_gesamt != 0:
+                    monthly_data_schwellenwert.append({
+                        
+                        0: round(row[7] / anteile_gesamt * schwellenwert_gesamt, None),
+                        1: round(row[8] / anteile_gesamt * schwellenwert_gesamt, None),
+                        2: round(row[9] / anteile_gesamt * schwellenwert_gesamt, None),
+                        3: round(row[10] / anteile_gesamt * schwellenwert_gesamt, None),
+                        4: round(row[11] / anteile_gesamt * schwellenwert_gesamt, None),
+                        5: round(row[12] / anteile_gesamt * schwellenwert_gesamt, None),
+                        6: round(row[13] / anteile_gesamt * schwellenwert_gesamt, None),
+                        7: round(row[14] / anteile_gesamt * schwellenwert_gesamt, None),
+                        8: round(row[15] / anteile_gesamt * schwellenwert_gesamt, None),
+                        9: round(row[16] / anteile_gesamt * schwellenwert_gesamt, None),
+                        10: round(row[17] / anteile_gesamt * schwellenwert_gesamt, None),
+                        11: round(row[18] / anteile_gesamt * schwellenwert_gesamt, None),
+                        12: row[2],
+                    })
+                else:
+                    monthly_data_schwellenwert.append({
+                        0: 0,
+                        1: 0,
+                        2: 0,
+                        3: 0,
+                        4: 0,
+                        5: 0,
+                        6: 0,
+                        7: 0,
+                        8: 0,
+                        9: 0,
+                        10: 0,
+                        11: 0,
+                        12: row[2],
+                    })
+            else:
+                monthly_data_schwellenwert.append({
+                    0: 0,
+                    1: 0,
+                    2: 0,
+                    3: 0,
+                    4: 0,
+                    5: 0,
+                    6: 0,
+                    7: 0,
+                    8: 0,
+                    9: 0,
+                    10: 0,
+                    11: 0,
+                    12: row[2],
+                })
+            
+        return Response({
+        'monthlyData': monthly_data,
+        'monthlyDataSchwellenwert': monthly_data_schwellenwert,
+        'primär_id': struktur.primär_id,
+        })
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_monthly_data(request):
+    try:
+        year = request.data.get('year')
+        data = request.data.get('data')
+        id = request.data.get('id')
+        with connection.cursor() as cursor:
+            for month in range(1, 13):
+                target_date = datetime(
+                    int(year),
+                    month,
+                    1
+                )
+                
+                cursor.execute("""
+                    INSERT INTO monatsdaten_teams (
+                        jahr_und_monat, primaerteam_id, umsatz_plan, umsatz, db_plan, db_ist
+                    ) VALUES (
+                        %s, %s, %s, %s, %s, %s
+                    )
+                    ON DUPLICATE KEY UPDATE
+                        umsatz_plan = VALUES(umsatz_plan),
+                        umsatz = VALUES(umsatz),
+                        db_plan = VALUES(db_plan),
+                        db_ist = VALUES(db_ist)
+                """, [
+                    target_date,
+                    id,
+                    data[month - 1]['umsatzPlan'],
+                    data[month - 1]['umsatzIst'],
+                    data[month - 1]['dbPlanPercent'],
+                    data[month - 1]['dbIstPercent']
+                ])
+                
+        return Response({'success': True})
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
