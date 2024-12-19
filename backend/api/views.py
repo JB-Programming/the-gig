@@ -909,3 +909,153 @@ def save_monthly_data(request):
     
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_team_data(request):
+    try:
+        year = request.data.get('year')
+        bezeichnung = request.data.get('team')
+        monthly_data = []
+        team_data = []
+        anteile_gesamt = 0
+        schwellenwert_gesamt = 0
+        mitarbeiter_prozent = 0
+        len_anteile = 0
+        team_schlüssel_prozent = 0
+        print("hi")
+        mitarbeiter_prozent = 0
+        with connection.cursor() as cursor:
+            struktur = Struktur.objects.get(name=bezeichnung)
+            print(struktur.team_id)
+            cursor.execute("""
+                SELECT anteil
+                FROM teamschlüssel
+                WHERE team_id = %s 
+                AND personen_id IS NOT NULL
+            """, [struktur.team_id])
+            anteile = cursor.fetchall()
+            print(anteile)
+
+            cursor.execute("""
+                SELECT primaerteam_id
+                FROM teamschlüssel
+                WHERE team_id = %s 
+                AND primaerteam_id IS NOT NULL
+            """, [struktur.team_id])
+            primär_id = cursor.fetchall() 
+
+            cursor.execute("""
+                SELECT provisionssatz
+                FROM teamschlüssel
+                WHERE team_id = %s 
+                AND primaerteam_id = %s
+            """, [struktur.team_id, primär_id])
+            team_schlüssel_prozent = cursor.fetchall() 
+            print("team_schlüssel_prozent", team_schlüssel_prozent)
+            team_schlüssel_prozent = float(team_schlüssel_prozent[0][0])
+            print("team_schlüssel_prozent after", type(team_schlüssel_prozent))
+
+
+            len_anteile = len(anteile)
+            print("This is len_anteile", len_anteile)
+            for x in anteile:
+                mitarbeiter_prozent = mitarbeiter_prozent + x[0]
+
+            cursor.execute("""
+                    SELECT *
+                    FROM primärteam_stammdaten_jahr 
+                    WHERE id = %s AND jahr = %s
+                """, [primär_id, year])
+
+            row_stamm = cursor.fetchone()
+
+            if row_stamm:
+                schwellenwert_gesamt = float(row_stamm[6])
+                anteile_gesamt = row_stamm[7] + row_stamm[8] + row_stamm[9] + row_stamm[10] + row_stamm[11] + row_stamm[12] + row_stamm[13] + row_stamm[14] + row_stamm[15] + row_stamm[16] + row_stamm[17] + row_stamm[18]
+                print("This is anteile",anteile_gesamt)
+            
+            for month in range(1, 13):
+                target_date = datetime(
+                    int(year),
+                    month,
+                    1
+                )
+                print(anteile_gesamt != 0)
+                if anteile_gesamt != 0:
+
+                    cursor.execute("""
+                        SELECT umsatz_plan, umsatz, db_plan, db_ist
+                        FROM monatsdaten_teams 
+                        WHERE primaerteam_id = %s AND jahr_und_monat = %s
+                    """, [primär_id, target_date])
+
+                    row_month = cursor.fetchone()
+
+                    if row_month and row_stamm: 
+                        umsatzPlan = row_month[0] if row_month[0] else 0
+                        dbPlanPercent = float(row_month[2]) if row_month[2] or float(row_month[2]) != 0 else row_stamm[2]
+                        print("This is ", dbPlanPercent)
+                        print("And that is", umsatzPlan)
+                        umsatzIst = row_month[1] if row_month[1] else 0
+                        dbIstPercent = float(row_month[3]) if row_month[3] or float(row_month[3]) != 0 else row_stamm[3]
+                        plan = (umsatzPlan * dbPlanPercent) / 100
+                        print(plan)
+                        ist = (umsatzIst * dbIstPercent) / 100
+                        print(ist)
+                        schwellen_wert = round(row_stamm[6+month] / anteile_gesamt * schwellenwert_gesamt, None) # Schwellenwert
+                        schwellen_wert_pro_mitarbeiter = schwellen_wert / (mitarbeiter_prozent / 100)
+                        print("This is schwellenwert", schwellen_wert)
+                        print("This is personen", schwellen_wert_pro_mitarbeiter)
+
+                        plan_db = (float(plan - schwellen_wert)*team_schlüssel_prozent) / 100
+                        ist_db = (float(ist - schwellen_wert)*team_schlüssel_prozent) / 100
+                        print("Tabelle:")
+                        print(plan_db)
+                        print(ist_db)
+                        print(schwellen_wert_pro_mitarbeiter)
+                        print(schwellen_wert)
+                        monthly_data.append({
+                            'teamentgeltPlan': round(plan_db,None),
+                            'teamentgeltIst': round(ist_db,None),
+                            'schwellenwertMA': round(schwellen_wert_pro_mitarbeiter,None),
+                            'schwellenwert': round(schwellen_wert,None)
+                        })
+                    else:
+                        print("nothing!")
+                
+
+            cursor.execute("""
+                    SELECT *
+                    FROM primärteam_stammdaten_jahr 
+                    WHERE id = %s AND jahr = %s
+                """, [struktur.primär_id, year])
+
+            row_stamm = cursor.fetchone()
+            print(row_stamm)
+
+            if row_stamm:
+                schwellenwert_gesamt = float(row_stamm[6])
+                anteile_gesamt = row_stamm[7] + row_stamm[8] + row_stamm[9] + row_stamm[10] + row_stamm[11] + row_stamm[12] + row_stamm[13] + row_stamm[14] + row_stamm[15] + row_stamm[16] + row_stamm[17] + row_stamm[18]
+                print(anteile_gesamt)
+                if anteile_gesamt != 0:
+                    monthly_data_schwellenwert.append({
+                        
+                        0: round(row_stamm[7] / anteile_gesamt * schwellenwert_gesamt, None),
+                        1: round(row_stamm[8] / anteile_gesamt * schwellenwert_gesamt, None),
+                        2: round(row_stamm[9] / anteile_gesamt * schwellenwert_gesamt, None),
+                        3: round(row_stamm[10] / anteile_gesamt * schwellenwert_gesamt, None),
+                        4: round(row_stamm[11] / anteile_gesamt * schwellenwert_gesamt, None),
+                        5: round(row_stamm[12] / anteile_gesamt * schwellenwert_gesamt, None),
+                        6: round(row_stamm[13] / anteile_gesamt * schwellenwert_gesamt, None),
+                        7: round(row_stamm[14] / anteile_gesamt * schwellenwert_gesamt, None),
+                        8: round(row_stamm[15] / anteile_gesamt * schwellenwert_gesamt, None),
+                        9: round(row_stamm[16] / anteile_gesamt * schwellenwert_gesamt, None),
+                        10: round(row_stamm[17] / anteile_gesamt * schwellenwert_gesamt, None),
+                        11: round(row_stamm[18] / anteile_gesamt * schwellenwert_gesamt, None),
+                        12: row_stamm[2],
+                    })
+        return Response(monthly_data, status=200)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)

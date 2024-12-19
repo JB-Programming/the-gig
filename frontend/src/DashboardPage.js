@@ -8,6 +8,7 @@ import Structure from './Structure';
 import Monatspflege from './components/tabs/Monatspflege';
 import Primärteam_Stamm from './components/tabs/Primärteam_Stamm';
 import Primärteam_Pflege from './components/tabs/Primärteam_Pflege';
+import Team_Pflege from './components/tabs/Team_Pflege';
 
 const DashboardPage = ({ setIsLoggedIn }) => {
 
@@ -197,6 +198,8 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         {nodeName === "Monatspflege" && <Monatspflege />}
         {nodeLevel === 2 && nodeName !== "DB Kunden 03" && <Primärteam_Pflege selectedNode={selectedNode}/>}
         {nodeName === "DB Kunden 03" && <Primärteam_Stamm selectedNode={selectedNode}/>}
+        {nodeLevel === 3 && <Team_Pflege selectedNode={selectedNode}/>}
+
       </Box>
     </Box>
   );

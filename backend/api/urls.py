@@ -23,4 +23,5 @@ urlpatterns = [
     path('save_schwellenwerte/', views.save_schwellenwerte, name='save-schwellenwerte'),
     path('get_monthly_data/', views.get_monthly_data, name='get-monthly-data'),
     path('save_monthly_data/', views.save_monthly_data, name='save-monthly-data'),
+    path('get_team_data/', views.get_team_data, name='get-team-data'),
 ]
