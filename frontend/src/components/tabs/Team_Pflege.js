@@ -57,6 +57,7 @@ const Team_Pflege = (selectedNode) => {
             if (response.data) {
                 console.log(response.data);
                 console.log(response.data);
+                console.log(response.data[0].teamentgeltPlan)
                 const newMonthlyData = monthlyData.map((row, index) => ({
                     ...row,
                     teamentgeltPlan: formatNumber(response.data[index].teamentgeltPlan || '0'),
