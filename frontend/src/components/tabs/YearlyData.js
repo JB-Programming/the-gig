@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
   Table, 
   TableBody, 
@@ -20,71 +21,70 @@ const YearlyData = ({ person }) => {
   const [error, setError] = useState(null);
   const [teamData, setTeamData] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/yearly-data/${person.id}`);
-        
-        // Log the raw response to see what we're getting
-        const rawResponse = await response.text();
-        console.log('Raw API response:', rawResponse);
 
-        // For now, use dummy data until the API is ready
-        const dummyData = [
-          { month: '01/2024', bonus: 1200, pay: 4500 },
-          { month: '02/2024', bonus: 1100, pay: 4500 },
-          { month: '03/2024', bonus: 1300, pay: 4500 },
-          { month: '04/2024', bonus: 1250, pay: 4500 },
-          { month: '05/2024', bonus: 1400, pay: 4500 },
-          { month: '06/2024', bonus: 1150, pay: 4500 },
-          { month: '07/2024', bonus: 1200, pay: 4500 },
-          { month: '08/2024', bonus: 1300, pay: 4500 },
-          { month: '09/2024', bonus: 1250, pay: 4500 },
-          { month: '10/2024', bonus: 1350, pay: 4500 },
-          { month: '11/2024', bonus: 1400, pay: 4500 },
-          { month: '12/2024', bonus: 2000, pay: 4500 },
-        ];
+console.log("teamdata is:",teamData);
+console.log(localStorage.getItem('token'))
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:8000/api/monatsdaten_teams/', {
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+          }
+      });
+      console.log("Response:", response);
+      setTeamData(response.data.teams_data);
 
-        setMonthlyData(dummyData);
 
-        // Dummy data for planned bonuses
-        const plannedData = [
-          { month: '01/2024', bonus: 2000 },
-          { month: '02/2024', bonus: 2100 },
-          { month: '03/2024', bonus: 3200 },
-          { month: '04/2024', bonus: 1300 },
-          { month: '05/2024', bonus: 1400 },
-          { month: '06/2024', bonus: 1500 },
-          { month: '07/2024', bonus: 1600 },
-          { month: '08/2024', bonus: 1700 },
-          { month: '09/2024', bonus: 1800 },
-          { month: '10/2024', bonus: 1900 },
-          { month: '11/2024', bonus: 2000 },
-          { month: '12/2024', bonus: 2100 },
-        ];
+      
+      // Set monthly data
+      const dummyData = [
+        { month: '01/2024', bonus: 1200, pay: 4500 },
+        { month: '02/2024', bonus: 1100, pay: 4500 },
+        { month: '03/2024', bonus: 1300, pay: 4500 },
+        { month: '04/2024', bonus: 1250, pay: 4500 },
+        { month: '05/2024', bonus: 1400, pay: 4500 },
+        { month: '06/2024', bonus: 1150, pay: 4500 },
+        { month: '07/2024', bonus: 1200, pay: 4500 },
+        { month: '08/2024', bonus: 1300, pay: 4500 },
+        { month: '09/2024', bonus: 1250, pay: 4500 },
+        { month: '10/2024', bonus: 1350, pay: 4500 },
+        { month: '11/2024', bonus: 1400, pay: 4500 },
+        { month: '12/2024', bonus: 2000, pay: 4500 },
+      ];
+      setMonthlyData(dummyData);
 
-        setMonthlyPlannedData(plannedData);
+      // Set planned data
+      const plannedData = [
+        { month: '01/2024', bonus: 2000 },
+        { month: '02/2024', bonus: 2100 },
+        { month: '03/2024', bonus: 3200 },
+        { month: '04/2024', bonus: 1300 },
+        { month: '05/2024', bonus: 1400 },
+        { month: '06/2024', bonus: 1500 },
+        { month: '07/2024', bonus: 1600 },
+        { month: '08/2024', bonus: 1700 },
+        { month: '09/2024', bonus: 1800 },
+        { month: '10/2024', bonus: 1900 },
+        { month: '11/2024', bonus: 2000 },
+        { month: '12/2024', bonus: 2100 },
+      ];
+      setMonthlyPlannedData(plannedData);
 
-        // Dummy data for team bonuses
-        const teamData = [
-          { team: 'Lager Team', fixedPay: 3500, overallPay: 5561 },
-          { team: 'Teamleitung Lager', fixedPay: 3500, overallPay: 5369 },
-          { team: 'Festbetrag', fixedPay: 3900, overallPay: 40100 },
-        ];
+    } catch (error) {
+      console.log("Error status:", error.response?.status);
+      console.log("Error data:", error.response?.data);
+      setError(error.response?.data?.error || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setTeamData(teamData);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [person.id]);
-
+  fetchData();
+}, [person.id]);
   if (loading) return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
       <CircularProgress />

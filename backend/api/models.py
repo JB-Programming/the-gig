@@ -48,4 +48,15 @@ class Struktur(models.Model):
     class Meta:
         db_table = 'struktur'
 
+class MonatsdatenTeams(models.Model):
+    id = models.AutoField(primary_key=True)
+    date = models.DateField()
+    primaerteam_id = models.IntegerField()
+    umsatzplan = models.IntegerField()
+    umsatz = models.IntegerField()
+    db_plan = models.DecimalField(max_digits=6, decimal_places=4)
+    db_ist = models.DecimalField(max_digits=6, decimal_places=4)
+    teamanpassung = models.IntegerField()
 
+    class Meta:
+        db_table = 'monatsdaten_teams'

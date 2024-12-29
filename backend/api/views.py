@@ -213,3 +213,10 @@ class UserRolesView(APIView):
         
         return Response(user_data)
 
+from .models import MonatsdatenTeams
+class MonatsdatenTeamsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        teams = MonatsdatenTeams.objects.all()
+        return Response({'teams_data': list(teams.values())})
