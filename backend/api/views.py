@@ -1124,3 +1124,79 @@ def save_teamschlüssel(request):
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_teamschlüssel_data_team(request):
+    try:
+        bezeichnung = request.data.get('team')
+        year = request.data.get('year')
+        team_data = []
+        with connection.cursor() as cursor:
+            struktur = Struktur.objects.get(name=bezeichnung)
+            print(struktur.struktur_id)
+            cursor.execute("""
+                SELECT name, mitarbeiter_id 
+                FROM struktur
+                WHERE JSON_Contains(parent, '%s');
+            """, [struktur.struktur_id])
+
+            teams = cursor.fetchall()
+            print(teams)
+            for team in teams:
+                cursor.execute("""
+                    SELECT anteil 
+                    FROM teamschlüssel
+                    WHERE year = %s AND personen_id = %s
+                """, [year, team[1]])
+                
+                row = cursor.fetchone()
+                print(row)
+                team_data.append({
+                    'team': team[0],
+                    'team_id': team[1],
+                    'provisionssatz': row[0] if row else 0
+                })
+
+        return Response(team_data, status=200)
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_teamschlüssel_team(request):
+    try:
+        data = request.data.get('data')
+        year = request.data.get('year')
+        bezeichnung = request.data.get('team')
+        print("hi")
+        print(bezeichnung['name'])
+        struktur = Struktur.objects.get(name=bezeichnung['name'])
+        with connection.cursor() as cursor:
+            for team in data:
+                print(team)
+                cursor.execute("""
+                    SELECT * FROM teamschlüssel 
+                    WHERE team_id = %s 
+                    AND personen_id = %s 
+                    AND year = %s
+                """, [struktur.team_id, team['team_id'], year])
+                result = cursor.fetchone()
+                if result:
+                    cursor.execute("""
+                        UPDATE teamschlüssel
+                        SET anteil = %s
+                        WHERE team_id = %s AND personen_id = %s AND year = %s
+                    """, [team['provisionssatz'], struktur.team_id, team['team_id'], year])
+                    print("Done")
+                else:
+                    cursor.execute("""
+                        INSERT INTO teamschlüssel (team_id, personen_id, anteil, year)
+                        VALUES (%s, %s, %s, %s)
+                    """, [struktur.team_id, team['team_id'], team['provisionssatz'], year])
+                    print("Done newS")
+                
+        return Response(year, status=200)
+    
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
