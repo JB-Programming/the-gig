@@ -212,11 +212,40 @@ class UserRolesView(APIView):
         print("Backend User Data:", user_data)  # Debug print
         
         return Response(user_data)
-
-from .models import MonatsdatenTeams
 class MonatsdatenTeamsView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def get(self, request):
-        teams = MonatsdatenTeams.objects.all()
-        return Response({'teams_data': list(teams.values())})
+        try:
+            # Get the person parameter from the request
+            person_name = request.GET.get('person')
+            first_name, last_name = person_name.split(',')  # Assuming format "lastname, firstname"
+            
+            with connection.cursor() as cursor:
+                # First get the employee ID from mitarbeiter_stammdaten
+                cursor.execute("""
+                    SELECT id FROM mitarbeiter_stammdaten 
+                    WHERE vorname = %s AND nachname = %s
+                """, [first_name.strip(), last_name.strip()])
+                
+                employee_id = cursor.fetchone()[0]
+                
+                # Then get all team data for this employee
+                cursor.execute("""
+                    SELECT DISTINCT mt.* 
+                    FROM monatsdaten_teams mt
+                    WHERE mt.primaerteam_id IN (
+                        SELECT team_id 
+                        FROM teamschlüssel 
+                        WHERE personen_id = %s
+                    )
+                """, [employee_id])
+                
+                columns = [col[0] for col in cursor.description]
+                teams_data = [
+                    dict(zip(columns, row))
+                    for row in cursor.fetchall()
+                ]
+                return Response({'teams_data': teams_data})
+        except DatabaseError as e:
+            return Response({'error': str(e)}, status=500)

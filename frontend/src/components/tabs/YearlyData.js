@@ -25,21 +25,27 @@ const YearlyData = ({ person }) => {
 console.log("teamdata is:",teamData);
 console.log(localStorage.getItem('token'))
 useEffect(() => {
-  const fetchData = async () => {
+  const fetchTeamData = async () => {
     try {
-      setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8000/api/monatsdaten_teams/', {
-          headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-          }
-      });
-      console.log("Response:", response);
-      setTeamData(response.data.teams_data);
-
-
+      console.log("Current token:", token);
       
+      const response = await axios.get(`http://localhost:8000/api/monatsdaten_teams/?person=${encodeURIComponent(person.name)}`, {
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log("Team data:", response.data);
+      setTeamData(response.data);
+    } catch (error) {
+      console.log("Error details:", error.response?.data);
+    }
+  };
+
+  fetchTeamData();
+}, [person.name]);
+/*
       // Set monthly data
       const dummyData = [
         { month: '01/2024', bonus: 1200, pay: 4500 },
@@ -84,7 +90,10 @@ useEffect(() => {
   };
 
   fetchData();
-}, [person.id]);
+}, [person.id]);*/
+
+
+
   if (loading) return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
       <CircularProgress />
