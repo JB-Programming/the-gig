@@ -23,7 +23,7 @@ const YearlyData = ({ person }) => {
 
 
 console.log("teamdata is:",teamData);
-console.log(localStorage.getItem('token'))
+console.log(localStorage.getItem('token'));
 useEffect(() => {
   const fetchTeamData = async () => {
     try {
@@ -45,6 +45,101 @@ useEffect(() => {
 
   fetchTeamData();
 }, [person.name]);
+
+
+const [teamPercentages, setTeamPercentages] = useState([]);
+
+useEffect(() => {
+  const fetchTeamPercentages = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `http://localhost:8000/api/team-percentages/?person=${encodeURIComponent(person.name)}`,
+        {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      setTeamPercentages(response.data.team_percentages);
+    } catch (error) {
+      console.error("Error fetching team percentages:", error);
+    }
+  };
+
+  fetchTeamPercentages();
+}, [person.name]);
+console.log("teamPercentages areq:",teamPercentages);
+
+
+
+
+const [teamDetails, setTeamDetails] = useState([]);
+
+useEffect(() => {
+  const fetchTeamDetails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `http://localhost:8000/api/team-details/?person=${encodeURIComponent(person.name)}`,
+        {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      setTeamDetails(response.data.team_details);
+      console.log("Team details:", response.data.team_details);
+    } catch (error) {
+      console.error("Error fetching team details:", error);
+    }
+  };
+
+  fetchTeamDetails();
+}, [person.name]);
+
+
+
+const calculateMonthlyBonuses = () => {
+  const bonuses = [];
+  
+  teamData.teams_data?.forEach(teamEntry => {
+    const teamDetail = teamDetails.find(detail => detail.team_id === teamEntry.primaerteam_id);
+    const teamPercentage = teamPercentages.find(percentage => 
+      percentage.team_id === teamEntry.primaerteam_id
+    );
+    
+    if (teamDetail && teamPercentage) {
+      // Format date from YYYY-MM-DD to MM/YYYY
+      //const date = new Date(teamEntry.jahr_und_monat);
+      const date = `${teamEntry.jahr_und_monat.slice(5,7)}/${teamEntry.jahr_und_monat.slice(0,4)}`;
+
+
+      
+      const bonus = (teamEntry.db_ist - teamEntry.db_plan) * teamDetail.provisionssatz* teamPercentage.percentage;
+                   
+      bonuses.push({
+        team: teamEntry.primaerteam_id,
+        date: date,
+        bonus: bonus
+      });
+    }
+  });
+  
+  return bonuses;
+};
+// Use the calculation
+const monthlyBonuses = calculateMonthlyBonuses();
+console.log(monthlyBonuses);
+
+
+
+
+
+
+
 /*
       // Set monthly data
       const dummyData = [

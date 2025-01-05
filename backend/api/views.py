@@ -249,3 +249,82 @@ class MonatsdatenTeamsView(APIView):
                 return Response({'teams_data': teams_data})
         except DatabaseError as e:
             return Response({'error': str(e)}, status=500)
+
+class TeamschluesselView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            person_name = request.GET.get('person')
+            first_name, last_name = person_name.split(',')
+            
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    WITH person_teams AS (
+                        SELECT ts.team_id, ts.anteil, ts.year
+                        FROM teamschlüssel ts
+                        JOIN mitarbeiter_stammdaten ms ON ts.personen_id = ms.id
+                        WHERE ms.vorname = %s AND ms.nachname = %s
+                    ),
+                    team_totals AS (
+                        SELECT team_id, year, SUM(anteil) as total_anteil
+                        FROM teamschlüssel
+                        GROUP BY team_id, year
+                    )
+                    SELECT 
+                        pt.team_id,
+                        pt.year,
+                        pt.anteil as person_anteil,
+                        tt.total_anteil,
+                        ROUND((pt.anteil * 100.0 / tt.total_anteil), 2) as percentage
+                    FROM person_teams pt
+                    JOIN team_totals tt ON pt.team_id = tt.team_id AND pt.year = tt.year
+                    ORDER BY pt.year, pt.team_id
+                """, [first_name.strip(), last_name.strip()])
+                
+                columns = [col[0] for col in cursor.description]
+                team_percentages = [dict(zip(columns, row)) for row in cursor.fetchall()]
+                
+                return Response({'team_percentages': team_percentages})
+                
+        except DatabaseError as e:
+            return Response({'error': str(e)}, status=500)
+
+class TeamDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            person_name = request.GET.get('person')
+            first_name, last_name = person_name.split(',')
+            
+            with connection.cursor() as cursor:
+                # First get the employee ID from mitarbeiter_stammdaten
+                cursor.execute("""
+                    SELECT id FROM mitarbeiter_stammdaten 
+                    WHERE vorname = %s AND nachname = %s
+                """, [first_name.strip(), last_name.strip()])
+                
+                employee_id = cursor.fetchone()[0]
+                
+                # Then get all team data for this employee
+                cursor.execute("""
+                    SELECT * FROM teamschlüssel ts
+                    WHERE (ts.team_id) IN (
+                        SELECT team_id 
+                        FROM teamschlüssel 
+                        WHERE personen_id = %s
+                    ) AND ts.primaerteam_id IS NOT NULL;
+                """, [employee_id])
+                
+                columns = [col[0] for col in cursor.description]
+                team_details = [dict(zip(columns, row)) for row in cursor.fetchall()]
+                
+                return Response({'team_details': team_details})
+        except DatabaseError as e:
+            return Response({'error': str(e)}, status=500)
+
+
+
+
+
