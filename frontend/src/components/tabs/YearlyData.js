@@ -196,53 +196,186 @@ return (
         <Typography variant="h6" sx={{ mb: 2 }}>
           Boni über die Monate
         </Typography>
-        <BarChart width={600} height={300} data={filteredBonuses}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month" />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey="bonus" fill="#8884d8" name="Bonus" />
-        </BarChart>
 
-        {/* Monthly Data Table */}
+        {(() => {
+          const monthlyTotalBonuses = Array.from({length: 12}, (_, i) => {
+            const month = String(i + 1).padStart(2, '0')
+            const monthTotal = filteredBonuses
+              .filter(b => b.date.split('/')[0] === month)
+              .reduce((sum, b) => sum + b.bonus, 0)
+            
+            return {
+              month: month,
+              bonus: monthTotal
+            }
+          })
+
+          return (
+            <BarChart width={800} height={300} data={monthlyTotalBonuses}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="bonus" fill="#8884d8" name="Total Bonus" />
+            </BarChart>
+          )
+        })()}
+
+        {/* Matrix-style Monthly Data Table */}
         <TableContainer component={Paper} sx={{ mb: 4 }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: 'primary.light' }}>
-                <TableCell>Monat</TableCell>
-                <TableCell align="right">Team</TableCell>
-                <TableCell align="right">Bonus (€)</TableCell>
+              <TableRow sx={{ 
+                backgroundColor: 'primary.main',
+                '& th': { 
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark',
+                  }
+                }
+              }}>
+                <TableCell>Team</TableCell>
+                {Array.from({length: 12}, (_, i) => (
+                  <TableCell 
+                    key={i} 
+                    align="right"
+                    sx={{
+                      position: 'relative',
+                      '&:hover::after': {
+                        content: '""',
+                        position: 'absolute',
+                        backgroundColor: 'rgba(227, 242, 253, 0.3)',
+                        width: '100%',
+                        height: '1000%',
+                        left: 0,
+                        top: 0,
+                        zIndex: 0,
+                      }
+                    }}
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </TableCell>
+                ))}
+                <TableCell align="right">Total</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredBonuses.map((row) => (
-                <TableRow 
-                  key={`${row.month}-${row.team}`}
-                  sx={{ '&:nth-of-type(odd)': { backgroundColor: 'action.hover' } }}
-                >
-                  <TableCell>{row.month}</TableCell>
-                  <TableCell align="right">{row.team}</TableCell>
-                  <TableCell align="right">{row.bonus.toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-              {/* Summary Row */}
-              <TableRow sx={{ backgroundColor: 'grey.100' }}>
-                <TableCell colSpan={2}><strong>Gesamt</strong></TableCell>
-                <TableCell align="right">
-                  <strong>
-                    {totalBonus.toFixed(2)}
-                  </strong>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </>
+              {[...new Set(filteredBonuses.map(b => b.team))].map(teamId => {
+                const teamMonthlyBonuses = Array.from({length: 12}, (_, i) => {
+                  const month = String(i + 1).padStart(2, '0')
+          return filteredBonuses.find(b => 
+            b.team === teamId && 
+            b.date.split('/')[0] === month
+          )?.bonus || 0
+        })
+        
+        const teamTotal = teamMonthlyBonuses.reduce((sum, bonus) => sum + bonus, 0)
+
+        return (
+          <TableRow 
+            key={teamId}
+            sx={{ 
+              '&:nth-of-type(odd)': { backgroundColor: '#f5f5f5' },
+              '&:hover': { backgroundColor: '#e3f2fd' },
+              '& td': { 
+                padding: '16px',
+                borderRight: '1px solid rgba(224, 224, 224, 1)'
+              }
+            }}
+          >
+            <TableCell sx={{ 
+              fontWeight: 'bold',
+              backgroundColor: 'primary.light',
+              color: 'primary.contrastText'
+            }}>
+              Team {teamId}
+            </TableCell>
+            {teamMonthlyBonuses.map((bonus, index) => (
+              <TableCell key={index} align="right">
+                {bonus > 0 ? bonus.toFixed(2) : '-'}
+              </TableCell>
+            ))}
+            <TableCell align="right" sx={{ 
+              fontWeight: 'bold',
+              backgroundColor: 'primary.light',
+              color: 'primary.contrastText'
+            }}>
+              {teamTotal.toFixed(2)}
+            </TableCell>
+          </TableRow>
+        )
+      })}
+      <TableRow sx={{ 
+        backgroundColor: 'primary.dark',
+        '& td': { 
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '1.1rem'
+        }
+      }}>
+        <TableCell>Total</TableCell>
+        {Array.from({length: 12}, (_, i) => {
+          const month = String(i + 1).padStart(2, '0')
+          const monthTotal = filteredBonuses
+            .filter(b => b.date.split('/')[0] === month)
+            .reduce((sum, b) => sum + b.bonus, 0)
+          return (
+            <TableCell key={i} align="right">
+              {monthTotal > 0 ? monthTotal.toFixed(2) : '-'}
+            </TableCell>
+          )
+        })}
+        <TableCell align="right">{totalBonus.toFixed(2)}</TableCell>
+      </TableRow>
+    </TableBody>
+  </Table>
+</TableContainer>
+        </>
     )}
+    {/* DB Performance Charts */}
+    <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+      Team DB Performance {selectedYear}
+    </Typography>
+
+    {[...new Set(teamData.teams_data?.filter(t => 
+        t.jahr_und_monat.slice(0,4) === selectedYear
+      ).map(t => t.primaerteam_id))]
+      .map(teamId => {
+        // Create full year dataset
+        const months = Array.from({length: 12}, (_, i) => {
+          const month = String(i + 1).padStart(2, '0');
+          const existingData = teamData.teams_data?.find(t => 
+            t.primaerteam_id === teamId && 
+            t.jahr_und_monat === `${selectedYear}-${month}-01`
+          );
+          return {
+            month: month,
+            db_ist: existingData?.db_ist || 0,
+            db_plan: existingData?.db_plan || 0
+          };
+        });
+
+        return (
+          <Box key={teamId} sx={{ mb: 4 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Team {teamId}
+            </Typography>
+            <BarChart width={800} height={300} data={months}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="db_ist" fill="#8884d8" name="DB Ist" />
+              <Bar dataKey="db_plan" fill="#82ca9d" name="DB Plan" />
+            </BarChart>
+          </Box>
+        );
+      })}
   </Box>
+  
 );
 };
 
-export default YearlyData; 
-
-
+export default YearlyData;
