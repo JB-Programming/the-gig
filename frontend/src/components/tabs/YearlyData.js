@@ -122,7 +122,7 @@ const calculateMonthlyBonuses = () => {
 
 
       
-      const bonus = (teamEntry.db_ist - teamEntry.db_plan) * teamDetail.provisionssatz* teamPercentage.percentage;
+      const bonus = (teamEntry.db_ist - teamEntry.db_plan) * teamDetail.provisionssatz*0.01* teamPercentage.percentage;
                    
       bonuses.push({
         team: teamEntry.primaerteam_id,
