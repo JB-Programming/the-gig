@@ -24,4 +24,6 @@ urlpatterns = [
     path('get_monthly_data/', views.get_monthly_data, name='get-monthly-data'),
     path('save_monthly_data/', views.save_monthly_data, name='save-monthly-data'),
     path('get_team_data/', views.get_team_data, name='get-team-data'),
+    path('create-user/', views.createUser, name='create-user'),
+
 ]

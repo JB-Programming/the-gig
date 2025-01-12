@@ -17,6 +17,7 @@ from django.db import DatabaseError
 from django.db import connection
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django import forms
 
 from django.http import JsonResponse
 from django.db import connection
@@ -1059,3 +1060,34 @@ def get_team_data(request):
         return Response(monthly_data, status=200)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+    
+
+
+from django import forms
+from django.contrib.auth.models import User
+from django.shortcuts import render
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAdminUser
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["username", "email", "password", "first_name", "last_name", "is_staff", "is_superuser"]
+
+from django.contrib.auth.decorators import user_passes_test
+
+
+@api_view(['POST'])
+@user_passes_test(lambda u: u.is_superuser)
+def createUser(request):
+    print("Request headers:", request.headers)  # Add this line
+    print("User authenticated:", request.user.is_authenticated)  # Add this line
+    if request.method == 'POST':
+        uform = UserForm(data=request.data)
+        if uform.is_valid():
+            user = uform.save(commit=False)
+            user.set_password(user.password)
+            user.save()
+            return JsonResponse({'message': 'User created successfully'}, status=201)
+        return JsonResponse({'errors': uform.errors}, status=400)
+    return JsonResponse({'message': 'Method not allowed'}, status=405)

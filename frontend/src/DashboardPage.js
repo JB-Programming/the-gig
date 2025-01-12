@@ -9,6 +9,7 @@ import Monatspflege from './components/tabs/Monatspflege';
 import Primärteam_Stamm from './components/tabs/Primärteam_Stamm';
 import Primärteam_Pflege from './components/tabs/Primärteam_Pflege';
 import Team_Pflege from './components/tabs/Team_Pflege';
+import CreateAccount from './components/tabs/CreateAccount';
 
 const DashboardPage = ({ setIsLoggedIn }) => {
 
@@ -18,6 +19,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
   const [nodeLevel, setNodeLevel] = useState(null);
   const [activeTab, setActiveTab] = useState('struktur');
   const [selectedNode, setSelectedNode] = useState(null);
+  
 
   // Add this handler
   const handleNodeSelect = (node) => {
@@ -161,6 +163,17 @@ const DashboardPage = ({ setIsLoggedIn }) => {
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                 Dashboard
               </Typography>
+              {(userData?.is_staff || userData?.is_superuser) && (
+                <Button
+                  onClick={() => setActiveTab('createAccount')}
+                  sx={{ 
+                    color: activeTab === 'createAccount' ? 'primary.main' : 'text.primary',
+                    mx: 1
+                  }}
+                >
+                  Create Account
+                </Button>
+              )}
               <Button 
                 onClick={() => setActiveTab('stammdaten')}
                 sx={{ 
@@ -191,14 +204,14 @@ const DashboardPage = ({ setIsLoggedIn }) => {
             </Toolbar>
           </AppBar>
         )}
-        
-        {showNavBar && <Toolbar />}
+                {showNavBar && <Toolbar />}
         
         {nodeName == "Hillmann & Geitz" && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
         {nodeName === "Monatspflege" && <Monatspflege />}
         {nodeLevel === 2 && nodeName !== "DB Kunden 03" && <Primärteam_Pflege selectedNode={selectedNode}/>}
         {nodeName === "DB Kunden 03" && <Primärteam_Stamm selectedNode={selectedNode}/>}
         {nodeLevel === 3 && <Team_Pflege selectedNode={selectedNode}/>}
+        {activeTab === 'createAccount' && <CreateAccount />}
 
       </Box>
     </Box>
@@ -206,3 +219,5 @@ const DashboardPage = ({ setIsLoggedIn }) => {
 };
 
 export default DashboardPage;
+
+
