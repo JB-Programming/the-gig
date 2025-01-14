@@ -82,24 +82,10 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-<<<<<<< HEAD
-<<<<<<< HEAD
         'NAME': 'u319438334_H_G',
         'USER': 'u319438334_H_G',
         'PASSWORD': 'Kp000000!!',
         'HOST': 'srv1475.hstgr.io',
-=======
-        'NAME': 'Hillmann_und_Geitz_DB',
-        'USER': 'root',
-        'PASSWORD': 'marschiboy4president',
-        'HOST': 'localhost',
->>>>>>> main
-=======
-        'NAME': 'u319438334_H_G',
-        'USER': 'u319438334_H_G',
-        'PASSWORD': 'Kp000000!!',
-        'HOST': '77.37.35.4',
->>>>>>> remotes/origin/12-teamschlüssel
         'PORT': '3306',
     }
 }

@@ -15,10 +15,11 @@ import PersonIcon from '@mui/icons-material/Person';
 import FolderIcon from '@mui/icons-material/Folder';
 import axios from 'axios';
 
-<<<<<<< HEAD
-const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonSelect }) => {
-=======
-/*
+
+
+// BREAKING PLEASE DELETE IF THIS IS NOT NEEDED ANYMORE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/*const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonSelect }) => {
+
 const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId }) => {
   console.log('User Access:', {
     isAdmin,
@@ -186,8 +187,8 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId }) => {
 export default DashboardTree; 
 
 */
-
-const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setNodeName, setNodeLevel, onNodeSelect }) => {
+const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonSelect, setNodeLevel, onNodeSelect, setNodeName }) => {
+//const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setNodeName, setNodeLevel, onNodeSelect }) => {
   const handleNodeClick = (node) => {
     console.log(node);
     setNodeName(node.name);
@@ -212,7 +213,6 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setNodeNa
     onNodeSelect(node);
   };
 
->>>>>>> remotes/origin/12-teamschlüssel
   const [employees, setEmployees] = useState([]);
   const [treeData, setTreeData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -384,13 +384,6 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setNodeNa
     <Paper elevation={2} sx={{ maxWidth: 400, borderRadius: 2, overflow: 'hidden' }}>
       <Box sx={{ p: 0.5 }}>
         <List component="nav" sx={{ p: 0 }}>
-<<<<<<< HEAD
-          {treeData.map(node => (
-            <React.Fragment key={`tree-${node.struktur_id}`}>
-              {renderTreeNode(node, 0)}
-            </React.Fragment>
-          ))}
-=======
           <ListItemStyled
             icon={<FolderIcon color="primary" />}
             primary="Hillmann & Geitz"
@@ -457,11 +450,11 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setNodeNa
               */}
             </List>
           </Collapse>
->>>>>>> remotes/origin/12-teamschlüssel
         </List>
       </Box>
     </Paper>
   );
 };
+
 
 export default DashboardTree;

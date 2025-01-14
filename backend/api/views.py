@@ -1316,8 +1316,6 @@ def save_teamschlüssel_team(request):
     
     except Exception as e:
         return Response({'error': str(e)}, status=500)
-<<<<<<< HEAD
-=======
     
 
 
@@ -1349,4 +1347,6 @@ def createUser(request):
             return JsonResponse({'message': 'User created successfully'}, status=201)
         return JsonResponse({'errors': uform.errors}, status=400)
     return JsonResponse({'message': 'Method not allowed'}, status=405)
->>>>>>> remotes/origin/16-person-in-django-mit-account-und-passwort-1preusse
+
+
+

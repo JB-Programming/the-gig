@@ -2,40 +2,30 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import DashboardTree from './components/DashboardTree';
-<<<<<<< HEAD
-import { Box, Paper, Typography, Avatar, Tabs, Tab } from '@mui/material';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import { Box, Paper, Typography, Avatar, Tabs, Tab, AppBar, Toolbar, Button } from '@mui/material';
 import YearlyData from './components/tabs/YearlyData';
 import Agreements from './components/tabs/Agreements';
 import MasterData from './components/tabs/MasterData';
 import ChangeHistory from './components/tabs/ChangeHistory';
-=======
-import { Box, Paper, Typography, Avatar, AppBar, Toolbar, Button} from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Structure from './Structure';
 import Monatspflege from './components/tabs/Monatspflege';
 import Primärteam_Stamm from './components/tabs/Primärteam_Stamm';
 import Primärteam_Pflege from './components/tabs/Primärteam_Pflege';
 import Team_Pflege from './components/tabs/Team_Pflege';
-<<<<<<< HEAD
 import Teamschlüssel from './components/tabs/Teamschlüssel';
 import Teamschlüssel_Team from './components/tabs/Teamschlüssel_Team';
->>>>>>> remotes/origin/12-teamschlüssel
-=======
 import CreateAccount from './components/tabs/CreateAccount';
->>>>>>> remotes/origin/16-person-in-django-mit-account-und-passwort-1preusse
 
 const DashboardPage = ({ setIsLoggedIn }) => {
 
   const [userData, setUserData] = useState(null);
-<<<<<<< HEAD
   const [selectedTab, setSelectedTab] = useState(0);
   const [selectedPerson, setSelectedPerson] = useState(null);
 
   useEffect(() => {
     console.log('Selected person changed:', selectedPerson);
   }, [selectedPerson]);
-=======
   const [showNavBar, setShowNavBar] = useState(true);
   const [nodeName, setNodeName] = useState(null);
   const [nodeLevel, setNodeLevel] = useState(null);
@@ -47,7 +37,6 @@ const DashboardPage = ({ setIsLoggedIn }) => {
   const handleNodeSelect = (node) => {
     setSelectedNode(node);
   };
->>>>>>> remotes/origin/12-teamschlüssel
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -130,13 +119,10 @@ const DashboardPage = ({ setIsLoggedIn }) => {
             isAdmin={userData?.is_staff}
             isSuperuser={userData?.is_superuser}
             userId={userData?.id}
-<<<<<<< HEAD
             onPersonSelect={handlePersonSelect}
-=======
             setNodeName={setNodeName}
             setNodeLevel={setNodeLevel}
             onNodeSelect={handleNodeSelect}
->>>>>>> remotes/origin/12-teamschlüssel
           />
         </Box>
 
@@ -194,7 +180,6 @@ const DashboardPage = ({ setIsLoggedIn }) => {
           p: 3,
         }}
       >
-<<<<<<< HEAD
         <Typography variant="h4" sx={{ mb: 3 }}>Dashboard</Typography>
         
         {selectedPerson ? (
@@ -244,7 +229,6 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         ) : (
           <Typography>Bitte wählen Sie eine Person aus</Typography>
         )}
-=======
         {showNavBar && (
           <AppBar position="fixed" 
             sx={{ 
@@ -306,16 +290,12 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         {nodeName === "Monatspflege" && <Monatspflege />}
         {nodeLevel === 2 && nodeName !== "DB Kunden 03" && activeTab === 'struktur' && <Primärteam_Pflege selectedNode={selectedNode}/>}
         {nodeName === "DB Kunden 03" && <Primärteam_Stamm selectedNode={selectedNode}/>}
-<<<<<<< HEAD
         {nodeLevel === 3 && activeTab == "struktur" && <Team_Pflege selectedNode={selectedNode}/>}
         {nodeLevel === 2 && nodeName !== "DB Kunden 03" && activeTab == 'stammdaten' && <Teamschlüssel selectedNode={selectedNode}/>}
         {nodeLevel === 3 && nodeName !== "DB Kunden 03" && activeTab == 'stammdaten' && <Teamschlüssel_Team selectedNode={selectedNode}/>}
-=======
         {nodeLevel === 3 && <Team_Pflege selectedNode={selectedNode}/>}
         {activeTab === 'createAccount' && <CreateAccount />}
->>>>>>> remotes/origin/16-person-in-django-mit-account-und-passwort-1preusse
 
->>>>>>> remotes/origin/12-teamschlüssel
       </Box>
     </Box>
   );
