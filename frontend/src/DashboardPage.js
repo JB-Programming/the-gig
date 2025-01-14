@@ -17,9 +17,13 @@ import Monatspflege from './components/tabs/Monatspflege';
 import Primärteam_Stamm from './components/tabs/Primärteam_Stamm';
 import Primärteam_Pflege from './components/tabs/Primärteam_Pflege';
 import Team_Pflege from './components/tabs/Team_Pflege';
+<<<<<<< HEAD
 import Teamschlüssel from './components/tabs/Teamschlüssel';
 import Teamschlüssel_Team from './components/tabs/Teamschlüssel_Team';
 >>>>>>> remotes/origin/12-teamschlüssel
+=======
+import CreateAccount from './components/tabs/CreateAccount';
+>>>>>>> remotes/origin/16-person-in-django-mit-account-und-passwort-1preusse
 
 const DashboardPage = ({ setIsLoggedIn }) => {
 
@@ -37,6 +41,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
   const [nodeLevel, setNodeLevel] = useState(null);
   const [activeTab, setActiveTab] = useState('struktur');
   const [selectedNode, setSelectedNode] = useState(null);
+  
 
   // Add this handler
   const handleNodeSelect = (node) => {
@@ -254,6 +259,17 @@ const DashboardPage = ({ setIsLoggedIn }) => {
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                 Dashboard
               </Typography>
+              {(userData?.is_staff || userData?.is_superuser) && (
+                <Button
+                  onClick={() => setActiveTab('createAccount')}
+                  sx={{ 
+                    color: activeTab === 'createAccount' ? 'primary.main' : 'text.primary',
+                    mx: 1
+                  }}
+                >
+                  Create Account
+                </Button>
+              )}
               <Button 
                 onClick={() => setActiveTab('stammdaten')}
                 sx={{ 
@@ -284,16 +300,20 @@ const DashboardPage = ({ setIsLoggedIn }) => {
             </Toolbar>
           </AppBar>
         )}
-        
-        {showNavBar && <Toolbar />}
+                {showNavBar && <Toolbar />}
         
         {nodeName == "Hillmann & Geitz" && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
         {nodeName === "Monatspflege" && <Monatspflege />}
         {nodeLevel === 2 && nodeName !== "DB Kunden 03" && activeTab === 'struktur' && <Primärteam_Pflege selectedNode={selectedNode}/>}
         {nodeName === "DB Kunden 03" && <Primärteam_Stamm selectedNode={selectedNode}/>}
+<<<<<<< HEAD
         {nodeLevel === 3 && activeTab == "struktur" && <Team_Pflege selectedNode={selectedNode}/>}
         {nodeLevel === 2 && nodeName !== "DB Kunden 03" && activeTab == 'stammdaten' && <Teamschlüssel selectedNode={selectedNode}/>}
         {nodeLevel === 3 && nodeName !== "DB Kunden 03" && activeTab == 'stammdaten' && <Teamschlüssel_Team selectedNode={selectedNode}/>}
+=======
+        {nodeLevel === 3 && <Team_Pflege selectedNode={selectedNode}/>}
+        {activeTab === 'createAccount' && <CreateAccount />}
+>>>>>>> remotes/origin/16-person-in-django-mit-account-und-passwort-1preusse
 
 >>>>>>> remotes/origin/12-teamschlüssel
       </Box>
@@ -302,3 +322,5 @@ const DashboardPage = ({ setIsLoggedIn }) => {
 };
 
 export default DashboardPage;
+
+

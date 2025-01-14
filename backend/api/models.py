@@ -48,7 +48,7 @@ class Struktur(models.Model):
     class Meta:
         db_table = 'struktur'
 
-<<<<<<< HEAD
+
 class MonatsdatenTeams(models.Model):
     id = models.AutoField(primary_key=True)
     date = models.DateField()
@@ -61,7 +61,6 @@ class MonatsdatenTeams(models.Model):
 
     class Meta:
         db_table = 'monatsdaten_teams'
-=======
 class Primär(models.Model):
     primär_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=80)
@@ -143,4 +142,3 @@ class MonatsdatenPersonen(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['jahr_und_monat', 'mitarbeiter_id'], name='monatsdaten_personen_pk')
         ]
->>>>>>> remotes/origin/12-teamschlüssel
