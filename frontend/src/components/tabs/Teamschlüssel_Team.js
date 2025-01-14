@@ -84,7 +84,7 @@ const Teamschlüssel_Team = (selectedNode) => {
     useEffect(() => {
         fetchData();
         console.log(selectedYear)
-    }, [selectedYear]);
+    }, [selectedYear, selectedNode]);
 
     useEffect(() => {
         fetchData();
@@ -181,9 +181,7 @@ const Teamschlüssel_Team = (selectedNode) => {
                         <TableRow sx={{ backgroundColor: '#e9ecef', fontWeight: 'bold' }}>
                             <TableCell>Summe</TableCell>
                             <TableCell sx={{ textAlign: 'right' }}>
-                                {(monthlyData.reduce((sum, row) => {
-                                    return sum + ((row.provisionssatz));
-                                }, 0).toString())}
+                                {Number(monthlyData.reduce((sum, row) => sum + Number(row.provisionssatz), 0))}
                             </TableCell>
                         </TableRow>
                     </TableBody>
