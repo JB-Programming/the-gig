@@ -83,6 +83,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
 <<<<<<< HEAD
+<<<<<<< HEAD
         'NAME': 'u319438334_H_G',
         'USER': 'u319438334_H_G',
         'PASSWORD': 'Kp000000!!',
@@ -93,6 +94,12 @@ DATABASES = {
         'PASSWORD': 'marschiboy4president',
         'HOST': 'localhost',
 >>>>>>> main
+=======
+        'NAME': 'u319438334_H_G',
+        'USER': 'u319438334_H_G',
+        'PASSWORD': 'Kp000000!!',
+        'HOST': '77.37.35.4',
+>>>>>>> remotes/origin/12-teamschlüssel
         'PORT': '3306',
     }
 }

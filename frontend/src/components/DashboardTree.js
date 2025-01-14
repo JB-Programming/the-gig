@@ -15,7 +15,204 @@ import PersonIcon from '@mui/icons-material/Person';
 import FolderIcon from '@mui/icons-material/Folder';
 import axios from 'axios';
 
+<<<<<<< HEAD
 const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonSelect }) => {
+=======
+/*
+const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId }) => {
+  console.log('User Access:', {
+    isAdmin,
+    isSuperuser,
+    userId,
+    hasFullAccess: isAdmin || isSuperuser
+  });
+
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [open, setOpen] = useState({
+    root: true,
+    admin: false,
+    persons: false,
+  });
+
+  const hasFullAccess = isAdmin || isSuperuser;
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:8000/api/employees/', {
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      const employeeData = response.data.employees;
+      setEmployees(hasFullAccess ? employeeData : employeeData.filter(emp => emp.id === userId));
+      setLoading(false);
+    } catch (err) {
+      console.error('Error details:', err);
+      setError(`Failed to fetch employees: ${err.message}`);
+      setLoading(false);
+    }
+  };
+
+  const handleClick = (section) => {
+    setOpen(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  if (loading) return <Typography>Loading...</Typography>;
+  if (error) return <Typography color="error">{error}</Typography>;
+
+  const ListItemStyled = ({ depth = 0, icon, primary, onClick, isExpandable = false }) => (
+    <ListItem 
+      onClick={onClick}
+      sx={{ 
+        pl: 1 + (depth * 1.5),
+        cursor: 'pointer',
+        '&:hover': {
+          bgcolor: 'action.hover',
+        },
+        transition: 'background-color 0.2s',
+        borderRadius: '4px',
+        my: 0.25,
+        height: 32 - (depth * 2),
+        '& .MuiSvgIcon-root': {
+          fontSize: 20 - (depth * 3)
+        }
+      }}
+    >
+      <ListItemIcon sx={{ minWidth: 24 }}>
+        {icon}
+      </ListItemIcon>
+      <ListItemText 
+        primary={primary} 
+        sx={{ 
+          '& .MuiTypography-root': { 
+            fontWeight: depth === 0 ? 500 : 400,
+            fontSize: `${0.9 - (depth * 0.15)}rem`,
+            color: depth === 0 ? 'text.primary' : `text.primary`
+          },
+          margin: 0
+        }}
+      />
+      {isExpandable && (
+        open[primary.toLowerCase()] ? 
+          <ExpandLessIcon sx={{ fontSize: 16 - (depth * 2) }} /> : 
+          <ExpandMoreIcon sx={{ fontSize: 16 - (depth * 2) }} />
+      )}
+    </ListItem>
+  );
+
+  return (
+    <Paper 
+      elevation={2} 
+      sx={{ 
+        maxWidth: 280,
+        borderRadius: 2,
+        overflow: 'hidden'
+      }}
+    >
+      <Box sx={{ p: 0.5 }}>
+        <List component="nav" sx={{ p: 0 }}>
+          <ListItemStyled
+            icon={<FolderIcon color="primary" />}
+            primary="Hillmann & Geitz"
+            onClick={() => handleClick('root')}
+            isExpandable
+          />
+
+          <Collapse in={open.root} timeout="auto">
+            <List component="div" disablePadding>
+              {hasFullAccess && (
+                <>
+                  <ListItemStyled
+                    depth={1}
+                    icon={<FolderIcon />}
+                    primary="Monatspflege"
+                  />
+                  <ListItemStyled
+                    depth={1}
+                    icon={<FolderIcon />}
+                    primary="Administrator"
+                    onClick={() => handleClick('admin')}
+                    isExpandable
+                  />
+
+                  <Collapse in={open.admin} timeout="auto">
+                    <List component="div" disablePadding>
+                      <ListItemStyled
+                        depth={2}
+                        icon={<PersonIcon />}
+                        primary="Heiko"
+                      />
+                    </List>
+                  </Collapse>
+                </>
+              )}
+              
+              <ListItemStyled
+                depth={1}
+                icon={<FolderIcon />}
+                primary="Personen"
+                onClick={() => handleClick('persons')}
+                isExpandable
+              />
+
+              <Collapse in={open.persons} timeout="auto">
+                <List component="div" disablePadding>
+                  {employees.map((employee, index) => (
+                    <ListItemStyled
+                      key={index}
+                      depth={2}
+                      icon={<PersonIcon />}
+                      primary={`${employee.vorname} ${employee.nachname}`}
+                    />
+                  ))}
+                </List>
+              </Collapse>
+            </List>
+          </Collapse>
+        </List>
+      </Box>
+    </Paper>
+  );
+};
+
+export default DashboardTree; 
+
+*/
+
+const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, setNodeName, setNodeLevel, onNodeSelect }) => {
+  const handleNodeClick = (node) => {
+    console.log(node);
+    setNodeName(node.name);
+    if (node["ordner_id"] != null) {
+      setNodeLevel(1);
+      console.log(1);
+    } else if (node["primär_id"] != null) {
+      setNodeLevel(2);
+      console.log(2);
+    } else if (node["team_id"] != null) {
+      setNodeLevel(3);
+      console.log(3);
+    } else if (node["mitarbeiter_id"] != null) {
+      setNodeLevel(4);
+      console.log(4);
+    } 
+    else {
+      setNodeLevel(0);
+      console.log(0);
+    }
+    console.log(node.name);
+    onNodeSelect(node);
+  };
+
+>>>>>>> remotes/origin/12-teamschlüssel
   const [employees, setEmployees] = useState([]);
   const [treeData, setTreeData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -122,7 +319,10 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonS
           depth={depth}
           icon={<FolderIcon />}
           primary={node.name}
-          onClick={() => handleClick(node.struktur_id)}
+          onClick={() => {
+            handleNodeClick(node);
+            handleClick(node.struktur_id)
+          }}
           isExpandable={hasChildren}
         />
         
@@ -184,11 +384,80 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonS
     <Paper elevation={2} sx={{ maxWidth: 400, borderRadius: 2, overflow: 'hidden' }}>
       <Box sx={{ p: 0.5 }}>
         <List component="nav" sx={{ p: 0 }}>
+<<<<<<< HEAD
           {treeData.map(node => (
             <React.Fragment key={`tree-${node.struktur_id}`}>
               {renderTreeNode(node, 0)}
             </React.Fragment>
           ))}
+=======
+          <ListItemStyled
+            icon={<FolderIcon color="primary" />}
+            primary="Hillmann & Geitz"
+            onClick={() => {
+              handleNodeClick({ name: "Hillmann & Geitz" });
+              handleClick('root');
+            }}
+            isExpandable
+          />
+
+          <Collapse in={open.root} timeout="auto">
+            <List component="div" disablePadding>
+              {/* Render tree structure */}
+              {treeData.map(node => renderTreeNode(node, 1))}
+
+              {/*//{Keep existing admin section}
+              {hasFullAccess && (
+                <>
+                  <ListItemStyled
+                    depth={1}
+                    icon={<FolderIcon />}
+                    primary="Monatspflege"
+                  />
+                  <ListItemStyled
+                    depth={1}
+                    icon={<FolderIcon />}
+                    primary="Administrator"
+                    onClick={() => handleClick('admin')}
+                    isExpandable
+                  />
+                  <Collapse in={open.admin} timeout="auto">
+                    <List component="div" disablePadding>
+                      <ListItemStyled
+                        depth={2}
+                        icon={<PersonIcon />}
+                        primary="Heiko"
+                      />
+                    </List>
+                  </Collapse>
+                </>
+              )}
+              
+
+              {Keep existing persons section}
+              <ListItemStyled
+                depth={1}
+                icon={<FolderIcon />}
+                primary="Personen"
+                onClick={() => handleClick('persons')}
+                isExpandable
+              />
+              <Collapse in={open.persons} timeout="auto">
+                <List component="div" disablePadding>
+                  {employees.map((employee, index) => (
+                    <ListItemStyled
+                      key={index}
+                      depth={2}
+                      icon={<PersonIcon />}
+                      primary={`${employee.vorname} ${employee.nachname}`}
+                    />
+                  ))}
+                </List>
+              </Collapse>
+              */}
+            </List>
+          </Collapse>
+>>>>>>> remotes/origin/12-teamschlüssel
         </List>
       </Box>
     </Paper>

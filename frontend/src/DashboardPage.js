@@ -1,21 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import DashboardTree from './components/DashboardTree';
+<<<<<<< HEAD
 import { Box, Paper, Typography, Avatar, Tabs, Tab } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import YearlyData from './components/tabs/YearlyData';
 import Agreements from './components/tabs/Agreements';
 import MasterData from './components/tabs/MasterData';
 import ChangeHistory from './components/tabs/ChangeHistory';
+=======
+import { Box, Paper, Typography, Avatar, AppBar, Toolbar, Button} from '@mui/material';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Structure from './Structure';
+import Monatspflege from './components/tabs/Monatspflege';
+import Primärteam_Stamm from './components/tabs/Primärteam_Stamm';
+import Primärteam_Pflege from './components/tabs/Primärteam_Pflege';
+import Team_Pflege from './components/tabs/Team_Pflege';
+import Teamschlüssel from './components/tabs/Teamschlüssel';
+import Teamschlüssel_Team from './components/tabs/Teamschlüssel_Team';
+>>>>>>> remotes/origin/12-teamschlüssel
 
 const DashboardPage = ({ setIsLoggedIn }) => {
+
   const [userData, setUserData] = useState(null);
+<<<<<<< HEAD
   const [selectedTab, setSelectedTab] = useState(0);
   const [selectedPerson, setSelectedPerson] = useState(null);
 
   useEffect(() => {
     console.log('Selected person changed:', selectedPerson);
   }, [selectedPerson]);
+=======
+  const [showNavBar, setShowNavBar] = useState(true);
+  const [nodeName, setNodeName] = useState(null);
+  const [nodeLevel, setNodeLevel] = useState(null);
+  const [activeTab, setActiveTab] = useState('struktur');
+  const [selectedNode, setSelectedNode] = useState(null);
+
+  // Add this handler
+  const handleNodeSelect = (node) => {
+    setSelectedNode(node);
+  };
+>>>>>>> remotes/origin/12-teamschlüssel
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -37,6 +64,25 @@ const DashboardPage = ({ setIsLoggedIn }) => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
   };
+
+  /*
+  const navigate = useNavigate();
+  const goToStructure = () => navigate('/structure');
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      {userData && (
+        <div>
+          <p>Welcome, {userData.username}</p>
+          <p>Email: {userData.email}</p>
+          <p>First Name: {userData.first_name}</p>
+          <p>Last Name: {userData.last_name}</p>
+        </div>
+      )}
+      <button onClick={handleLogout}>Logout</button>
+      <button onClick={goToStructure}>Structure</button>
+    </div> {**/
 
   const userRole = userData?.is_superuser ? 'Superuser' : 
                   userData?.is_staff ? 'Administrator' : 'User';
@@ -79,7 +125,13 @@ const DashboardPage = ({ setIsLoggedIn }) => {
             isAdmin={userData?.is_staff}
             isSuperuser={userData?.is_superuser}
             userId={userData?.id}
+<<<<<<< HEAD
             onPersonSelect={handlePersonSelect}
+=======
+            setNodeName={setNodeName}
+            setNodeLevel={setNodeLevel}
+            onNodeSelect={handleNodeSelect}
+>>>>>>> remotes/origin/12-teamschlüssel
           />
         </Box>
 
@@ -137,6 +189,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
           p: 3,
         }}
       >
+<<<<<<< HEAD
         <Typography variant="h4" sx={{ mb: 3 }}>Dashboard</Typography>
         
         {selectedPerson ? (
@@ -186,6 +239,63 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         ) : (
           <Typography>Bitte wählen Sie eine Person aus</Typography>
         )}
+=======
+        {showNavBar && (
+          <AppBar position="fixed" 
+            sx={{ 
+              width: 'calc(100% - 320px)',
+              ml: '320px',
+              backgroundColor: '#f5f5f5',
+              color: 'text.primary',
+              boxShadow: 1
+            }}
+          >
+            <Toolbar>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                Dashboard
+              </Typography>
+              <Button 
+                onClick={() => setActiveTab('stammdaten')}
+                sx={{ 
+                  color: activeTab === 'stammdaten' ? 'primary.main' : 'text.primary',
+                  mx: 1
+                }}
+              >
+                Stammdaten
+              </Button>
+              <Button 
+                onClick={() => setActiveTab('historie')}
+                sx={{ 
+                  color: activeTab === 'historie' ? 'primary.main' : 'text.primary',
+                  mx: 1
+                }}
+              >
+                Änderungshistorie
+              </Button>
+              <Button 
+                onClick={() => setActiveTab('struktur')}
+                sx={{ 
+                  color: activeTab === 'struktur' ? 'primary.main' : 'text.primary',
+                  mx: 1
+                }}
+              >
+                Struktur
+              </Button>
+            </Toolbar>
+          </AppBar>
+        )}
+        
+        {showNavBar && <Toolbar />}
+        
+        {nodeName == "Hillmann & Geitz" && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
+        {nodeName === "Monatspflege" && <Monatspflege />}
+        {nodeLevel === 2 && nodeName !== "DB Kunden 03" && activeTab === 'struktur' && <Primärteam_Pflege selectedNode={selectedNode}/>}
+        {nodeName === "DB Kunden 03" && <Primärteam_Stamm selectedNode={selectedNode}/>}
+        {nodeLevel === 3 && activeTab == "struktur" && <Team_Pflege selectedNode={selectedNode}/>}
+        {nodeLevel === 2 && nodeName !== "DB Kunden 03" && activeTab == 'stammdaten' && <Teamschlüssel selectedNode={selectedNode}/>}
+        {nodeLevel === 3 && nodeName !== "DB Kunden 03" && activeTab == 'stammdaten' && <Teamschlüssel_Team selectedNode={selectedNode}/>}
+
+>>>>>>> remotes/origin/12-teamschlüssel
       </Box>
     </Box>
   );

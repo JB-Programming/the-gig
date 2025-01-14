@@ -136,6 +136,7 @@ const CompanyStructurePage = () => {
       <h2>Data Structure</h2>
       <div>{renderTree(treeData)}</div>
     </div>
+    
   );
 };
 
