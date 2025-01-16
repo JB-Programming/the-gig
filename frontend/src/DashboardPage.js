@@ -36,6 +36,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
   // Add this handler
   const handleNodeSelect = (node) => {
     setSelectedNode(node);
+    console.log(node);
   };
 
   useEffect(() => {
@@ -295,6 +296,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         {nodeLevel === 3 && nodeName !== "DB Kunden 03" && activeTab == 'stammdaten' && <Teamschlüssel_Team selectedNode={selectedNode}/>}
         {nodeLevel === 3 && <Team_Pflege selectedNode={selectedNode}/>}
         {activeTab === 'createAccount' && <CreateAccount />}
+        {nodeLevel === 4 && activeTab == 'stammdaten' && <YearlyData person={selectedNode}/>}
 
       </Box>
     </Box>

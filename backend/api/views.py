@@ -319,6 +319,7 @@ class MonatsdatenTeamsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
+        
         try:
             # Get the person parameter from the request
             person_name = request.GET.get('person')
@@ -332,24 +333,61 @@ class MonatsdatenTeamsView(APIView):
                 """, [first_name.strip(), last_name.strip()])
                 
                 employee_id = cursor.fetchone()[0]
-                
-                # Then get all team data for this employee
+
                 cursor.execute("""
-                    SELECT DISTINCT mt.* 
+                    SELECT DISTINCT mt.*
                     FROM monatsdaten_teams mt
                     WHERE mt.primaerteam_id IN (
-                        SELECT team_id 
-                        FROM teamschlüssel 
-                        WHERE personen_id = %s
+                        SELECT ts2.primaerteam_id 
+                        FROM teamschlüssel ts1
+                        JOIN teamschlüssel ts2 ON ts1.team_id = ts2.team_id
+                        WHERE ts1.personen_id = %s
+                        AND ts2.primaerteam_id IS NOT NULL
                     )
                 """, [employee_id])
-                
+
                 columns = [col[0] for col in cursor.description]
-                teams_data = [
+                teams_data3 = [
                     dict(zip(columns, row))
                     for row in cursor.fetchall()
                 ]
-                return Response({'teams_data': teams_data})
+
+                print("Hello \n\n")
+                print("Hello \n\n")
+                print("Hello \n\n")
+                print(teams_data3)
+
+                for row in teams_data3:
+                    date_str = str(row['jahr_und_monat'])
+                    year = int(date_str.split('-')[0])  # Gets 2024
+                    month = int(date_str.split('-')[1])  # Gets 1
+                    primaer_id = row['primaerteam_id']
+
+                    # First get all data for the year and id
+                    cursor.execute("""
+                        SELECT jan_anteile, feb_anteile, mar_anteile, apr_anteile, 
+                            mai_anteile, jun_anteile, jul_anteile, aug_anteile,
+                            sep_anteile, okt_anteile, nov_anteile, dez_anteile,
+                            schwellenwert_db
+                        FROM primärteam_stammdaten_jahr
+                        WHERE jahr = %s AND id = %s
+                    """, [year, primaer_id])
+                    
+                    stamm_data = cursor.fetchone()
+                    if stamm_data:
+                        total_anteile = sum(stamm_data[0:12])
+                        print(stamm_data[0:12])
+                        month_anteile = stamm_data[month-1]
+                        schwellenwert = round((month_anteile / total_anteile) * float(stamm_data[12]),0) if total_anteile else 0
+                        row['schwellenwert'] = schwellenwert
+
+                    else:
+                        row['schwellenwert'] = 0
+
+
+
+
+                return Response({'teams_data': teams_data3})
         except DatabaseError as e:
             return Response({'error': str(e)}, status=500)
 
@@ -362,9 +400,10 @@ class TeamschluesselView(APIView):
             first_name, last_name = person_name.split(',')
             
             with connection.cursor() as cursor:
+
                 cursor.execute("""
                     WITH person_teams AS (
-                        SELECT ts.team_id, ts.anteil, ts.year
+                        SELECT ts.team_id, ts.anteil, ts.year, ts.primaerteam_id
                         FROM teamschlüssel ts
                         JOIN mitarbeiter_stammdaten ms ON ts.personen_id = ms.id
                         WHERE ms.vorname = %s AND ms.nachname = %s
@@ -374,8 +413,9 @@ class TeamschluesselView(APIView):
                         FROM teamschlüssel
                         GROUP BY team_id, year
                     )
-                    SELECT 
+                    SELECT
                         pt.team_id,
+                        pt.primaerteam_id,
                         pt.year,
                         pt.anteil as person_anteil,
                         tt.total_anteil,
@@ -384,11 +424,40 @@ class TeamschluesselView(APIView):
                     JOIN team_totals tt ON pt.team_id = tt.team_id AND pt.year = tt.year
                     ORDER BY pt.year, pt.team_id
                 """, [first_name.strip(), last_name.strip()])
-                
+
                 columns = [col[0] for col in cursor.description]
-                team_percentages = [dict(zip(columns, row)) for row in cursor.fetchall()]
+                team_percentages2 = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+                print("Hello this is me 2\n\n")
+                print(team_percentages2)
+
+                cursor.execute("""
+                    SELECT id FROM mitarbeiter_stammdaten 
+                    WHERE vorname = %s AND nachname = %s
+                """, [first_name.strip(), last_name.strip()])
                 
-                return Response({'team_percentages': team_percentages})
+                employee_id = cursor.fetchone()[0]
+
+                cursor.execute("""
+                    SELECT ts1.*, ts2.*
+                    FROM teamschlüssel ts1
+                    JOIN teamschlüssel ts2 
+                        ON ts1.team_id = ts2.team_id
+                    WHERE ts1.personen_id = %s
+                    AND ts2.primaerteam_id IS NOT NULL
+                """, [employee_id])
+
+                columns = [col[0] for col in cursor.description]
+                team_percentages3 = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+                # Create mapping from team_id to primaerteam_id from second object
+                primaerteam_mapping = {item['team_id']: item['primaerteam_id'] for item in team_percentages3}
+                # Update first object with correct primaerteam_ids
+                for item in team_percentages2:
+                    item['primaerteam_id'] = primaerteam_mapping[item['team_id']]
+
+
+                return Response({'team_percentages': team_percentages2})
                 
         except DatabaseError as e:
             return Response({'error': str(e)}, status=500)
@@ -890,6 +959,7 @@ def get_monthly_data(request):
                     month,
                     1
                 )
+                print("HI")
                 cursor.execute("""
                     SELECT umsatz_plan, umsatz, db_plan, db_ist
                     FROM monatsdaten_teams 
@@ -973,7 +1043,7 @@ def get_monthly_data(request):
                     9: 0,
                     10: 0,
                     11: 0,
-                    12: row[2],
+                    12: 0,
                 })
             
         return Response({
@@ -1000,7 +1070,12 @@ def save_monthly_data(request):
                     month,
                     1
                 )
-                
+                print(target_date,
+                    id,
+                    data[month - 1]['umsatzPlan'],
+                    data[month - 1]['umsatzIst'],
+                    data[month - 1]['dbPlanPercent'],
+                    data[month - 1]['dbIstPercent'])
                 cursor.execute("""
                     INSERT INTO monatsdaten_teams (
                         jahr_und_monat, primaerteam_id, umsatz_plan, umsatz, db_plan, db_ist

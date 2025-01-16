@@ -99,7 +99,7 @@ const Primärteam_Pflege = (selectedNode) => {
             month: row.month,
             umsatzPlan: stripFormatting(row.umsatzPlan),
             umsatzIst: stripFormatting(row.umsatzIst),
-            dbPlanPercent: stripComma(row.dbPlanPercent) === planDeckungsbeitrag ? '0.0000' : stripComma(row.dbPlanPercent),
+            dbPlanPercent: stripComma(row.dbPlanPercent), //=== planDeckungsbeitrag ? '0.0000' : stripComma(row.dbPlanPercent),
             dbIstPercent: stripComma(row.dbIstPercent),
             dbPlan: stripFormatting(row.dbPlan),
             dbIst: stripFormatting(row.dbIst),

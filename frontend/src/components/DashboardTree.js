@@ -192,6 +192,7 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonS
   const handleNodeClick = (node) => {
     console.log(node);
     setNodeName(node.name);
+    console.log(node.name);
     if (node["ordner_id"] != null) {
       setNodeLevel(1);
       console.log(1);

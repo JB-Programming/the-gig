@@ -27,6 +27,7 @@ const YearlyData = ({ person }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
 
 console.log("teamdata is:",teamData);
+console.log("person:",person);
 console.log(localStorage.getItem('token'));
 useEffect(() => {
   const fetchTeamData = async () => {
@@ -108,30 +109,60 @@ useEffect(() => {
 
 const calculateMonthlyBonuses = () => {
   const bonuses = [];
-  
+
+  console.log("Team Details:", teamDetails);
+  console.log("Team Data:", teamData.teams_data);
   teamData.teams_data?.forEach(teamEntry => {
-    const teamDetail = teamDetails.find(detail => detail.team_id === teamEntry.primaerteam_id);
+    teamDetails.forEach(teamDetail => {
+      console.log("This is teamDetail",teamDetail);
+      if (teamDetail.primaerteam_id === teamEntry.primaerteam_id) {
+        const teamPercentage = teamPercentages.find(percentage =>
+          percentage.team_id === teamDetail.team_id
+        );
+        if (teamPercentage) {
+          console.log("Team %:",teamPercentage)
+          console.log("Team Entry:",teamEntry);
+          const bonus = Math.round(((teamEntry.umsatz * teamEntry.db_ist *0.01) - teamEntry.schwellenwert) * (teamDetail.provisionssatz * 0.01) * (teamPercentage.percentage * 0.01)) //* (teamPercentage.percentage / 100);
+          console.log(bonus)
+          bonuses.push({
+            team: teamDetail.team_id,
+            date: `${teamEntry.jahr_und_monat.slice(5,7)}/${teamEntry.jahr_und_monat.slice(0,4)}`,
+            bonus: bonus
+          });
+        }
+      }
+    });
+    /*
+    const teamDetail = teamDetails.find(detail => detail.primaerteam_id === teamEntry.primaerteam_id);
     const teamPercentage = teamPercentages.find(percentage => 
-      percentage.team_id === teamEntry.primaerteam_id
+      percentage.primaerteam_id === teamEntry.primaerteam_id
     );
+    console.log("One", teamPercentage);
+    console.log("Two", teamEntry);
     
     if (teamDetail && teamPercentage) {
       // Format date from YYYY-MM-DD to MM/YYYY
       //const date = new Date(teamEntry.jahr_und_monat);
       const date = `${teamEntry.jahr_und_monat.slice(5,7)}/${teamEntry.jahr_und_monat.slice(0,4)}`;
-
+      /*console.log("Team Entry:", teamData.teams_data);
+      console.log("db_ist:", teamEntry.db_ist);
+      console.log("db_plan:", teamEntry.db_plan);
+      console.log("provisionssatz:", teamDetail.provisionssatz);
+      console.log("percentage:", teamPercentage.percentage);
+      console.log("percantage:", teamPercentages);
 
       
       const bonus = (teamEntry.db_ist - teamEntry.db_plan) * teamDetail.provisionssatz*0.01* teamPercentage.percentage;
-                   
+      console.log(teamPercentage.team_id)             
       bonuses.push({
-        team: teamEntry.primaerteam_id,
+        team: teamPercentage.team_id, //teamEntry.primaerteam_id,
         date: date,
         bonus: bonus
-      });
-    }
-  });
-  
+      });*/
+    
+    });
+    
+  console.log("Bonuses:", bonuses);
   return bonuses;
 };
 
