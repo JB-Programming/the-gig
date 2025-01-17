@@ -271,17 +271,20 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonS
   };
 
   const handleEmployeeClick = (employee) => {
-    console.log('Clicked employee:', employee);
+    employee.ordner_id = null;
+    employee.mitarbeiter_id = 99;
+    handleNodeClick(employee);
+    /*console.log('Clicked employee:', employee);
     onPersonSelect({
       id: employee.id,
       name: employee.name,
       // Add any other employee data you need
-    });
-  };
+      */
+    };
 
   const renderTreeNode = (node, depth = 0) => {
     const hasChildren = node.children && node.children.length > 0;
-    
+    {/*}
     if (node.name === "Personen" && node.children) {
       return (
         <div key={`folder-${node.struktur_id}`}>
@@ -303,7 +306,7 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonS
                     depth={depth + 1}
                     icon={<PersonIcon />}
                     primary={person.name}
-                    onClick={() => handleEmployeeClick(person)}
+                    onClick={() => handleEmployeeClick(node)}
                   />
                 ))}
               </List>
@@ -311,7 +314,7 @@ const DashboardTree = ({ isAdmin = false, isSuperuser = false, userId, onPersonS
           )}
         </div>
       );
-    }
+    }*/}
 
     return (
       <div key={`folder-${node.struktur_id}`}>

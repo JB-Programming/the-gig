@@ -181,9 +181,10 @@ const DashboardPage = ({ setIsLoggedIn }) => {
           p: 3,
         }}
       >
+        {/*}
         <Typography variant="h4" sx={{ mb: 3 }}>Dashboard</Typography>
         
-        {selectedPerson ? (
+        {selectedPerson == "123" ? (
           <>
             <Typography variant="h6" sx={{ mb: 2 }}>
               {selectedPerson.vorname} {selectedPerson.nachname}
@@ -229,7 +230,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
           </>
         ) : (
           <Typography>Bitte wählen Sie eine Person aus</Typography>
-        )}
+        )} */}
         {showNavBar && (
           <AppBar position="fixed" 
             sx={{ 
@@ -244,7 +245,7 @@ const DashboardPage = ({ setIsLoggedIn }) => {
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                 Dashboard
               </Typography>
-              {(userData?.is_staff || userData?.is_superuser) && (
+              {(userData?.is_staff || userData?.is_superuser && nodeName == "Hillmann & Geitz" ) && (
                 <Button
                   onClick={() => setActiveTab('createAccount')}
                   sx={{ 
@@ -263,6 +264,15 @@ const DashboardPage = ({ setIsLoggedIn }) => {
                 }}
               >
                 Stammdaten
+              </Button>
+              <Button 
+                onClick={() => setActiveTab('teamschlüssel')}
+                sx={{ 
+                  color: activeTab === 'teamschlüssel' ? 'primary.main' : 'text.primary',
+                  mx: 1
+                }}
+              >
+                Teamschlüssel
               </Button>
               <Button 
                 onClick={() => setActiveTab('historie')}
@@ -289,13 +299,13 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         
         {nodeName == "Hillmann & Geitz" && activeTab === 'struktur' && <Structure setIsLoggedIn={setIsLoggedIn} />}
         {nodeName === "Monatspflege" && <Monatspflege />}
-        {nodeLevel === 2 && nodeName !== "DB Kunden 03" && activeTab === 'struktur' && <Primärteam_Pflege selectedNode={selectedNode}/>}
-        {nodeName === "DB Kunden 03" && <Primärteam_Stamm selectedNode={selectedNode}/>}
+        {nodeLevel === 2 && activeTab === 'struktur' && <Primärteam_Pflege selectedNode={selectedNode}/>}
+        {nodeLevel === 2 && activeTab === 'stammdaten' && <Primärteam_Stamm selectedNode={selectedNode}/>}
         {nodeLevel === 3 && activeTab == "struktur" && <Team_Pflege selectedNode={selectedNode}/>}
-        {nodeLevel === 2 && nodeName !== "DB Kunden 03" && activeTab == 'stammdaten' && <Teamschlüssel selectedNode={selectedNode}/>}
-        {nodeLevel === 3 && nodeName !== "DB Kunden 03" && activeTab == 'stammdaten' && <Teamschlüssel_Team selectedNode={selectedNode}/>}
-        {nodeLevel === 3 && <Team_Pflege selectedNode={selectedNode}/>}
-        {activeTab === 'createAccount' && <CreateAccount />}
+        {nodeLevel === 2 && activeTab == 'teamschlüssel' && <Teamschlüssel selectedNode={selectedNode}/>}
+        {nodeLevel === 3 && activeTab == 'teamschlüssel' && <Teamschlüssel_Team selectedNode={selectedNode}/>}
+        {nodeLevel === 3 && activeTab == 'struktur' && <Team_Pflege selectedNode={selectedNode}/>}
+        {nodeName == "Hillmann & Geitz" && activeTab === 'createAccount' && <CreateAccount />}
         {nodeLevel === 4 && activeTab == 'stammdaten' && <YearlyData person={selectedNode}/>}
 
       </Box>
