@@ -17,6 +17,9 @@ import {
   MenuItem
 } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { useCallback } from 'react';
+import { useMemo } from 'react';
+
 
 const YearlyData = ({ person }) => {
   const [monthlyData, setMonthlyData] = useState([]);
@@ -25,10 +28,151 @@ const YearlyData = ({ person }) => {
   const [error, setError] = useState(null);
   const [teamData, setTeamData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+  const [teamPercentages, setTeamPercentages] = useState([]);
+  const [teamDetails, setTeamDetails] = useState([]);
+  const [availableYears, setAvailableYears] = useState([0]);
 
 console.log("teamdata is:",teamData);
 console.log("person:",person);
 console.log(localStorage.getItem('token'));
+
+// Memoize expensive calculations
+const calculateMonthlyBonuses = useCallback(() => {
+  const bonuses = [];
+  teamData.teams_data?.forEach(teamEntry => {
+      teamDetails.forEach(teamDetail => {
+          if (teamDetail.primaerteam_id === teamEntry.primaerteam_id) {
+              const teamPercentage = teamPercentages.find(percentage =>
+                  percentage.team_id === teamDetail.team_id
+              );
+              if (teamPercentage) {
+                  const bonus = Math.round(((teamEntry.umsatz * teamEntry.db_ist *0.01) - teamEntry.schwellenwert) * (teamDetail.provisionssatz * 0.01) * (teamPercentage.percentage * 0.01));
+                  bonuses.push({
+                      team: teamDetail.team_id,
+                      date: `${teamEntry.jahr_und_monat.slice(5,7)}/${teamEntry.jahr_und_monat.slice(0,4)}`,
+                      bonus: bonus
+                  });
+              }
+          }
+      });
+  });
+  // Get unique years for menu
+  const availableYears = [...new Set(bonuses.map(bonus => 
+  bonus.date.split('/')[1]
+))].sort();
+  setAvailableYears(availableYears);
+  return bonuses;
+}, [teamData, teamDetails, teamPercentages]);
+
+// Memoize filtered bonuses
+const filteredBonuses = useMemo(() => {
+  const bonuses = calculateMonthlyBonuses();
+  return bonuses.filter(bonus => 
+      bonus.date.split('/')[1] === selectedYear
+  );
+}, [calculateMonthlyBonuses, selectedYear]);
+
+// Single data fetch
+const fetchData = useCallback(async () => {
+  const token = localStorage.getItem('token');
+  try {
+      const [teamDataRes, percentagesRes, detailsRes] = await Promise.all([
+          axios.get(`http://localhost:8000/api/monatsdaten_teams/?person=${encodeURIComponent(person.name)}`, {
+              headers: {
+                  'Authorization': `Token ${token}`,
+                  'Content-Type': 'application/json'
+              }
+          }),
+          axios.get(`http://localhost:8000/api/team-percentages/?person=${encodeURIComponent(person.name)}`, {
+              headers: {
+                  'Authorization': `Token ${token}`,
+                  'Content-Type': 'application/json'
+              }
+          }),
+          axios.get(`http://localhost:8000/api/team-details/?person=${encodeURIComponent(person.name)}`, {
+              headers: {
+                  'Authorization': `Token ${token}`,
+                  'Content-Type': 'application/json'
+              }
+          })
+      ]);
+
+      setTeamData(teamDataRes.data);
+      setTeamPercentages(percentagesRes.data.team_percentages);
+      setTeamDetails(detailsRes.data.team_details);
+  } catch (error) {
+      console.error("Error fetching data:", error);
+  }
+}, [person.name]);
+
+useEffect(() => {
+  fetchData();
+}, [fetchData]);
+
+/*
+useEffect(() => {
+  const fetchTeamData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      console.log("Current token:", token);
+      
+      const response = await axios.get(`http://localhost:8000/api/monatsdaten_teams/?person=${encodeURIComponent(person.name)}`, {
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log("Team data:", response.data);
+      setTeamData(response.data);
+    } catch (error) {
+      console.log("Error details:", error.response?.data);
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `http://localhost:8000/api/team-percentages/?person=${encodeURIComponent(person.name)}`,
+        {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      setTeamPercentages(response.data.team_percentages);
+    } catch (error) {
+      console.error("Error fetching team percentages:", error);
+    }
+
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `http://localhost:8000/api/team-details/?person=${encodeURIComponent(person.name)}`,
+        {
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      setTeamDetails(response.data.team_details);
+      console.log("Team details:", response.data.team_details);
+    } catch (error) {
+      console.error("Error fetching team details:", error);
+    }
+  };
+
+  fetchTeamData();
+  console.log("Hello")
+  console.log("Hello")
+  console.log("Hello")
+  console.log("Hello")
+
+}, [person.name]);
+
+/*
+
 useEffect(() => {
   const fetchTeamData = async () => {
     try {
@@ -50,9 +194,6 @@ useEffect(() => {
 
   fetchTeamData();
 }, [person.name]);
-
-
-const [teamPercentages, setTeamPercentages] = useState([]);
 
 useEffect(() => {
   const fetchTeamPercentages = async () => {
@@ -77,11 +218,6 @@ useEffect(() => {
 }, [person.name]);
 console.log("teamPercentages areq:",teamPercentages);
 
-
-
-
-const [teamDetails, setTeamDetails] = useState([]);
-
 useEffect(() => {
   const fetchTeamDetails = async () => {
     try {
@@ -105,25 +241,22 @@ useEffect(() => {
   fetchTeamDetails();
 }, [person.name]);
 
+*/
 
+/*
 
 const calculateMonthlyBonuses = () => {
   const bonuses = [];
 
-  console.log("Team Details:", teamDetails);
-  console.log("Team Data:", teamData.teams_data);
   teamData.teams_data?.forEach(teamEntry => {
     teamDetails.forEach(teamDetail => {
-      console.log("This is teamDetail",teamDetail);
+      //console.log("This is teamDetail",teamDetail);
       if (teamDetail.primaerteam_id === teamEntry.primaerteam_id) {
         const teamPercentage = teamPercentages.find(percentage =>
           percentage.team_id === teamDetail.team_id
         );
         if (teamPercentage) {
-          console.log("Team %:",teamPercentage)
-          console.log("Team Entry:",teamEntry);
           const bonus = Math.round(((teamEntry.umsatz * teamEntry.db_ist *0.01) - teamEntry.schwellenwert) * (teamDetail.provisionssatz * 0.01) * (teamPercentage.percentage * 0.01)) //* (teamPercentage.percentage / 100);
-          console.log(bonus)
           bonuses.push({
             team: teamDetail.team_id,
             date: `${teamEntry.jahr_und_monat.slice(5,7)}/${teamEntry.jahr_und_monat.slice(0,4)}`,
@@ -158,7 +291,7 @@ const calculateMonthlyBonuses = () => {
         team: teamPercentage.team_id, //teamEntry.primaerteam_id,
         date: date,
         bonus: bonus
-      });*/
+      });  *  /
     
     });
     
@@ -168,19 +301,23 @@ const calculateMonthlyBonuses = () => {
 
 // Calculate bonuses first
 const bonuses = calculateMonthlyBonuses();
+console.log("This runs again")
 
-// Get unique years for menu
-const availableYears = [...new Set(bonuses.map(bonus => 
-  bonus.date.split('/')[1]
-))].sort();
 
 // Filter bonuses for selected year
 const filteredBonuses = bonuses.filter(bonus => 
   bonus.date.split('/')[1] === selectedYear
 );
-
+*/
 // Calculate total sum instead of average
 const totalBonus = filteredBonuses.reduce((sum, curr) => sum + curr.bonus, 0);
+
+// Get unique years for menu
+/*
+const availableYears = [...new Set(bonuses.map(bonus => 
+  bonus.date.split('/')[1]
+))].sort();
+*/
 
 return (
   <Box>

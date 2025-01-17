@@ -352,10 +352,11 @@ class MonatsdatenTeamsView(APIView):
                     for row in cursor.fetchall()
                 ]
 
-                print("Hello \n\n")
+                """print("Hello \n\n")
                 print("Hello \n\n")
                 print("Hello \n\n")
                 print(teams_data3)
+                """
 
                 for row in teams_data3:
                     date_str = str(row['jahr_und_monat'])
@@ -376,7 +377,7 @@ class MonatsdatenTeamsView(APIView):
                     stamm_data = cursor.fetchone()
                     if stamm_data:
                         total_anteile = sum(stamm_data[0:12])
-                        print(stamm_data[0:12])
+                        #print(stamm_data[0:12])
                         month_anteile = stamm_data[month-1]
                         schwellenwert = round((month_anteile / total_anteile) * float(stamm_data[12]),0) if total_anteile else 0
                         row['schwellenwert'] = schwellenwert
