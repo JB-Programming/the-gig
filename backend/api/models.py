@@ -142,3 +142,15 @@ class MonatsdatenPersonen(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['jahr_und_monat', 'mitarbeiter_id'], name='monatsdaten_personen_pk')
         ]
+
+class ÄnderungsBlog(models.Model):
+    id = models.AutoField(primary_key=True)
+    entität = models.TextField()
+    typ = models.TextField()
+    gueltigkeit = models.DateTimeField()
+    aenderung = models.TextField()
+    zeitpunkt = models.DateTimeField(auto_now_add=True)
+    geaendert_von=models.IntegerField()
+
+    class Meta:
+        db_table = 'änderungslog'

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import TeamListView, EmployeeListView, UserInfoView, UserRolesView, MonatsdatenTeamsView, TeamschluesselView, TeamDetailsView
+from .views import TeamListView, EmployeeListView, UserInfoView, UserRolesView, MonatsdatenTeamsView, TeamschluesselView, TeamDetailsView, ÄnderungsBlogViewSet
 
 urlpatterns = [
     path('login/', views.login, name='login'),
@@ -32,6 +32,7 @@ urlpatterns = [
     path('get_teamschluessel_data_team/', views.get_teamschlüssel_data_team, name='get-teamschlüssel-data-team'),
     path('save_teamschluessel_team/', views.save_teamschlüssel_team, name='save-teamschlüssel-team'),
     path('create-user/', views.createUser, name='create-user'),
+    path('changes/', ÄnderungsBlogViewSet.as_view({'get': 'list', 'post': 'create'}), name='changes'),
 
 ]
 

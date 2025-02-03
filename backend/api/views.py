@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from rest_framework.permissions import IsAdminUser
 from rest_framework.throttling import UserRateThrottle
 from django.db import transaction
-
+from django.utils import timezone
 from rest_framework.views import APIView
 from django.apps import apps
 from django.db import DatabaseError
@@ -146,13 +146,20 @@ def monatspflege_speichern(request):
                     1
                 )
 
-            # Delete existing entries for this date
+            # Delete existing entries and log
             try:
                 MonatsdatenTeams.objects.filter(jahr_und_monat=target_date).delete()
+                ÄnderungsBlog.objects.create(
+                    entität='Monatsdaten Teams',
+                    typ='DELETE',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Deleted team data for {target_date.strftime("%Y-%m")}',
+                    geaendert_von=request.user.id
+                )
             except:
                 print("No teams data!")
             
-            # Create new team entries
+            # Create new team entries and log
             for team in team_data:
                 revenue = str(team['revenue']).replace('.', '').replace(',', '.')
                 db_percent = str(team['dbPercent']).replace(',', '.')
@@ -169,13 +176,29 @@ def monatspflege_speichern(request):
                     db_ist=db_val,
                     teamanpassung=adjustment_val
                 )
+
+                ÄnderungsBlog.objects.create(
+                    entität='Monatsdaten Teams',
+                    typ='CREATE',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Created team data for team {x}, date {target_date.strftime("%Y-%m")}: Revenue={revenue_val}, DB={db_val}',
+                    geaendert_von=request.user.id
+                )
                 x += 1
+
             try:
                 MonatsdatenPersonen.objects.filter(jahr_und_monat=target_date).delete()
+                ÄnderungsBlog.objects.create(
+                    entität='Monatsdaten Personen',
+                    typ='DELETE',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Deleted person data for {target_date.strftime("%Y-%m")}',
+                    geaendert_von=request.user.id
+                )
             except:
                 print("No person data!")
 
-            # Create new person entries
+            # Create new person entries and log
             for person in person_data:
                 MonatsdatenPersonen.objects.create(
                     jahr_und_monat=target_date,
@@ -186,12 +209,22 @@ def monatspflege_speichern(request):
                     teiler=int(person['teiler'])
                 )
 
+                ÄnderungsBlog.objects.create(
+                    entität='Monatsdaten Personen',
+                    typ='CREATE',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Created person data for ID {person["mitarbeiter_id"]}, date {target_date.strftime("%Y-%m")}: Festbetrag={person["festbetrag"]}, Fixum={person["fixum"]}',
+                    geaendert_von=request.user.id
+                )
+
             return Response({'success': True})
+
     except Exception as e:
         return Response(
-            {str(e)},#{'error': f'Failed to fetch teams: {str(e)}'}, 
+            {str(e)},
             status=500
         )
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -578,7 +611,6 @@ class RelationRateThrottle(UserRateThrottle):
 
 @api_view(['POST'])
 def create_instance(request):
-    #if request.user.is_superuser:
     try:
         with transaction.atomic():
             new_typ = request.data.get('typ')
@@ -602,14 +634,23 @@ def create_instance(request):
                     bemerkung=new_bemerkung,
                 )
 
-                # Then create the corresponding Struktur entry
                 struktur = Struktur.objects.create(
                     name=f"{new_vorname}, {new_name}",
                     mitarbeiter_id=employee.id,
                     parent=[]
                 )
-                print(employee.id)
+
+                # Log person creation
+                ÄnderungsBlog.objects.create(
+                    entität='Person',
+                    typ='CREATE',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Created new person: {new_vorname} {new_name}',
+                    geaendert_von=request.user.id
+                )
+
                 return Response({'success': True, 'id_mit': employee.id, 'id_struktur': struktur.struktur_id})
+
             elif new_typ == "Team":
                 team = Team.objects.create(
                     bezeichnung = new_name,
@@ -618,10 +659,21 @@ def create_instance(request):
 
                 struktur = Struktur.objects.create(
                     name=f"{new_name}",
-                    team_id=team.id,  # Generate appropriate ID
+                    team_id=team.id,
                     parent=[]
                 )
+
+                # Log team creation
+                ÄnderungsBlog.objects.create(
+                    entität='Team',
+                    typ='CREATE',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Created new team: {new_name}',
+                    geaendert_von=request.user.id
+                )
+
                 return Response({'success': True, 'id_mit': team.id, 'id_struktur': struktur.struktur_id})
+
             elif new_typ == "Ordner":
                 ordner = Folder.objects.create(
                     bezeichnung = new_name,
@@ -630,10 +682,21 @@ def create_instance(request):
 
                 struktur = Struktur.objects.create(
                     name=f"{new_name}",
-                    ordner_id=ordner.id,  # Generate appropriate ID
+                    ordner_id=ordner.id,
                     parent=[]
                 )
+
+                # Log folder creation
+                ÄnderungsBlog.objects.create(
+                    entität='Ordner',
+                    typ='CREATE',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Created new folder: {new_name}',
+                    geaendert_von=request.user.id
+                )
+
                 return Response({'success': True, 'id_mit': ordner.id, 'id_struktur': struktur.struktur_id})
+
             elif new_typ == "Primär":
                 primär = Primary.objects.create(
                     bezeichnung = new_name,
@@ -642,14 +705,24 @@ def create_instance(request):
 
                 struktur = Struktur.objects.create(
                     name=f"{new_name}",
-                    primär_id=primär.id,  # Generate appropriate ID
+                    primär_id=primär.id,
                     parent=[]
                 )
+
+                # Log primary creation
+                ÄnderungsBlog.objects.create(
+                    entität='Primär',
+                    typ='CREATE',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Created new primary: {new_name}',
+                    geaendert_von=request.user.id
+                )
+
                 return Response({'success': True, 'id_mit': primär.id, 'id_struktur': struktur.struktur_id})
-            
-        
+
     except Exception as e:
         return Response({'error': 'Operation failed'}, status=500)
+
 
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
@@ -936,6 +1009,15 @@ def save_schwellenwerte(request):
                     combinedData['monthlyData'][10]['anteile'],
                     combinedData['monthlyData'][11]['anteile']
                 ])
+                
+                # Log the change
+                ÄnderungsBlog.objects.create(
+                    entität='Primärteam Stammdaten Jahr',
+                    typ='UPSERT',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Updated yearly data for team {combinedData["primär_id"]}, year {combinedData["year"]}: PlanDB={combinedData["planDB"]}, Schwellenwert={combinedData["schwellwertDB"]}',
+                    geaendert_von=request.user.id
+                )
 
             return Response({'success': True})
     except Exception as e:
@@ -1096,6 +1178,15 @@ def save_monthly_data(request):
                     data[month - 1]['dbPlanPercent'],
                     data[month - 1]['dbIstPercent']
                 ])
+
+                """# Log the change
+                ÄnderungsBlog.objects.create(
+                    entität='Monatsdaten Teams',
+                    typ='UPSERT',
+                    gueltigkeit=timezone.now(),
+                    aenderung=f'Updated monthly data for team {id}, date {target_date.strftime("%Y-%m")}: Plan={data[month-1]["umsatzPlan"]}, Ist={data[month-1]["umsatzIst"]}',
+                    geaendert_von=request.user.id
+                )"""
                 
         return Response({'success': True})
     
@@ -1381,12 +1472,30 @@ def save_teamschlüssel_team(request):
                         WHERE team_id = %s AND personen_id = %s AND year = %s
                     """, [team['provisionssatz'], struktur.team_id, team['team_id'], year])
                     print("Done")
+
+                    # Log the update
+                    ÄnderungsBlog.objects.create(
+                        entität='Teamschlüssel',
+                        typ='UPDATE',
+                        gueltigkeit=timezone.now(),
+                        aenderung=f'Updated team share for team {struktur.team_id}, person {team["team_id"]}, year {year} to {team["provisionssatz"]}',
+                        geaendert_von=request.user.id
+                    )
                 else:
                     cursor.execute("""
                         INSERT INTO teamschlüssel (team_id, personen_id, anteil, year)
                         VALUES (%s, %s, %s, %s)
                     """, [struktur.team_id, team['team_id'], team['provisionssatz'], year])
                     print("Done newS")
+
+                    # Log the creation
+                    ÄnderungsBlog.objects.create(
+                        entität='Teamschlüssel',
+                        typ='CREATE',
+                        gueltigkeit=timezone.now(),
+                        aenderung=f'Created new team share for team {struktur.team_id}, person {team["team_id"]}, year {year} with {team["provisionssatz"]}',
+                        geaendert_von=request.user.id
+                    )
                 
         return Response(year, status=200)
     
@@ -1420,9 +1529,45 @@ def createUser(request):
             user = uform.save(commit=False)
             user.set_password(user.password)
             user.save()
+            # Log the change
+            ÄnderungsBlog.objects.create(
+                entität='User',
+                typ='CREATE',
+                gueltigkeit=timezone.now(),
+                aenderung=f'Created new user: {user.username}',
+                geaendert_von=request.user.id
+            )
             return JsonResponse({'message': 'User created successfully'}, status=201)
         return JsonResponse({'errors': uform.errors}, status=400)
     return JsonResponse({'message': 'Method not allowed'}, status=405)
 
 
 
+from rest_framework import viewsets
+from .models import ÄnderungsBlog
+from .serializers import ÄnderungsBlogSerializer
+
+
+class ÄnderungsBlogViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = ÄnderungsBlog.objects.all().order_by('-zeitpunkt')
+    serializer_class = ÄnderungsBlogSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(geaendert_von=self.request.user)
+
+
+def save_teamschlüssel(request):
+    data = json.loads(request.body)
+    # Existing save logic...
+
+    # Add change logging
+    ÄnderungsBlog.objects.create(
+        entität='Teamschlüssel',
+        typ='UPDATE',
+        gueltigkeit=timezone.now(),
+        aenderung=f'Updated team key values for team {data["team_id"]}',
+        geaendert_von=request.user.id
+    )
+
+    return JsonResponse({'status': 'success'})
