@@ -1571,3 +1571,84 @@ def save_teamschlüssel(request):
     )
 
     return JsonResponse({'status': 'success'})
+
+
+
+"""@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_änderungsblog(request):
+    try:
+        changes = ÄnderungsBlog.objects.values(
+            'id', 
+            'entität', 
+            'typ', 
+            'aenderung', 
+            'geaendert_von'
+        )
+        print("QuerySet created successfully")
+        
+        return Response(list(changes))
+        
+    except Exception as e:
+        print(f"Error at step: {e.__traceback__.tb_lineno}")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
+        return Response({'error': str(e)}, status=500)
+"""
+
+"""@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_änderungsblog(request):
+    try:
+        changes = ÄnderungsBlog.objects.extra(
+            select={'formatted_date': "DATE_FORMAT(gueltigkeit, '%%Y-%%m-%%d')"}
+        ).values(
+            'id', 
+            'entität', 
+            'typ', 
+            'formatted_date',
+            'aenderung', 
+            'geaendert_von'
+        )
+        print("QuerySet created successfully with MySQL date formatting")
+        
+        return Response(list(changes))
+        
+    except Exception as e:
+        print(f"Error at step: {e.__traceback__.tb_lineno}")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
+        return Response({'error': str(e)}, status=500)"""
+
+from django.db.models import OuterRef, Value
+from django.db.models.functions import Concat
+from django.contrib.auth.models import User
+from django.db.models.functions import TruncSecond
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_änderungsblog(request):
+    try:
+        # First check what user data we have
+        users = User.objects.all().values('id', 'first_name', 'last_name')
+        print("Available users:", users)
+
+        changes = ÄnderungsBlog.objects.annotate(
+        formatted_date=TruncSecond('gueltigkeit')
+        ).values('id', 'entität', 'typ', 'formatted_date', 'aenderung', 'geaendert_von', 'zeitpunkt')
+        print("Changes with user IDs:", list(changes))
+        
+        # Then proceed with the full query
+        changes = changes.annotate(
+            user_name=User.objects.filter(id=OuterRef('geaendert_von'))
+                .annotate(full_name=Concat('first_name', Value(' '), 'last_name'))
+                .values('full_name')[:1]
+        )
+        
+        return Response(list(changes))
+        
+    except Exception as e:
+        print(f"Error at step: {e.__traceback__.tb_lineno}")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
+        return Response({'error': str(e)}, status=500)

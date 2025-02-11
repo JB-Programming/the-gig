@@ -17,10 +17,12 @@ const ChangeHistory = () => {
   useEffect(() => {
       const fetchChangeHistory = async () => {
           try {
-              const response = await axios.get('http://localhost:8000/api/changes/', {
-                  headers: { Authorization: `Token ${localStorage.getItem('token')}` }
-              });
+            const response = await axios.get('http://localhost:8000/api/aenderungsblog/', {
+                headers: { Authorization: `Token ${localStorage.getItem('token')}` }
+            });
+            
               setChanges(response.data);
+              console.log('Change history:', response.data);
           } catch (error) {
               console.error('Failed to fetch change history:', error);
           }
@@ -38,28 +40,24 @@ const ChangeHistory = () => {
               <Table>
                   <TableHead>
                       <TableRow>
-                          <TableCell>ID</TableCell>
                           <TableCell>Entität</TableCell>
                           <TableCell>Typ</TableCell>
-                          <TableCell>Gültigkeit</TableCell>
+                          <TableCell>Änderungszeitpunkt</TableCell>
                           <TableCell>Änderung</TableCell>
-                          <TableCell>Zeitpunkt</TableCell>
                           <TableCell>Geändert von</TableCell>
                       </TableRow>
                   </TableHead>
-                  <TableBody>
-                      {changes.map((change) => (
-                          <TableRow key={change.id}>
-                              <TableCell>{change.id}</TableCell>
-                              <TableCell>{change.entität}</TableCell>
-                              <TableCell>{change.typ}</TableCell>
-                              <TableCell>{new Date(change.gueltigkeit).toLocaleDateString()}</TableCell>
-                              <TableCell>{change.aenderung}</TableCell>
-                              <TableCell>{new Date(change.zeitpunkt).toLocaleString()}</TableCell>
-                              <TableCell>{change.geaendert_von}</TableCell>
-                          </TableRow>
-                      ))}
-                  </TableBody>
+                    <TableBody>
+                        {changes.map((change, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{change.entität}</TableCell>
+                                <TableCell>{change.typ}</TableCell>
+                                <TableCell>{new Date(change.zeitpunkt).toLocaleString()}</TableCell>
+                                <TableCell>{change.aenderung}</TableCell>
+                                <TableCell>{change.user_name}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>  
               </Table>
           </TableContainer>
       </div>

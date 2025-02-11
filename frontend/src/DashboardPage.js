@@ -307,12 +307,14 @@ const DashboardPage = ({ setIsLoggedIn }) => {
         {nodeLevel === 3 && activeTab == 'struktur' && <Team_Pflege selectedNode={selectedNode}/>}
         {nodeName == "Hillmann & Geitz" && activeTab === 'createAccount' && <CreateAccount />}
         {nodeLevel === 4 && activeTab == 'stammdaten' && <YearlyData person={selectedNode}/>}
-
+        {activeTab === 'historie' && <ChangeHistory />}
       </Box>
     </Box>
   );
 };
 
 export default DashboardPage;
+
+
 
 

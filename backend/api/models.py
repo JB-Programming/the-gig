@@ -149,7 +149,7 @@ class ÄnderungsBlog(models.Model):
     typ = models.TextField()
     gueltigkeit = models.DateTimeField()
     aenderung = models.TextField()
-    zeitpunkt = models.DateTimeField(auto_now_add=True)
+    zeitpunkt = models.DateTimeField()
     geaendert_von=models.IntegerField()
 
     class Meta:
