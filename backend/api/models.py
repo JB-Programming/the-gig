@@ -143,6 +143,10 @@ class MonatsdatenPersonen(models.Model):
             models.UniqueConstraint(fields=['jahr_und_monat', 'mitarbeiter_id'], name='monatsdaten_personen_pk')
         ]
 
+
+# Add to existing User model tracking
+from django.contrib.auth.models import User
+User.add_to_class('last_login_ip', models.GenericIPAddressField(null=True, blank=True))
 class ÄnderungsBlog(models.Model):
     id = models.AutoField(primary_key=True)
     entität = models.TextField()
@@ -154,3 +158,11 @@ class ÄnderungsBlog(models.Model):
 
     class Meta:
         db_table = 'änderungslog'
+
+class LoginAttempt(models.Model):
+    username = models.CharField(max_length=150)
+    attempt_time = models.DateTimeField(auto_now_add=True)
+    successful = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'login_attempts'
