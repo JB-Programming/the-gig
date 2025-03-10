@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-cp0$$(8n379cmi%gish6o&j1x%d5zl#gf1ewqnwctlu8uf4!^v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["0b839d38-843a-490c-823f-f8b7abfe0434.e1-us-east-azure.choreoapps.dev"]
 
 
 # Application definition
@@ -135,9 +135,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Allow all origins for development purposes (be careful in production)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "0b839d38-843a-490c-823f-f8b7abfe0434.e1-us-east-azure.choreoapps.dev"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_METHODS = [
     'DELETE',
