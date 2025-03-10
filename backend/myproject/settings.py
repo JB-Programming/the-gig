@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-cp0$$(8n379cmi%gish6o&j1x%d5zl#gf1ewqnwctlu8uf4!^v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["0b839d38-843a-490c-823f-f8b7abfe0434.e1-us-east-azure.choreoapps.dev"]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
