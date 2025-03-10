@@ -23,7 +23,7 @@ from django.http import JsonResponse
 from django.db import connection
 from .models import teamschlüssel
 from .models import Struktur
-from .models import MonatsdatenTeams, MonatsdatenPersonen, LoginAttempt
+from .models import MonatsdatenTeams, MonatsdatenPersonen
 from datetime import datetime
 import copy
 from decimal import Decimal
@@ -1652,52 +1652,3 @@ def get_änderungsblog(request):
         print(f"Error type: {type(e).__name__}")
         print(f"Error message: {str(e)}")
         return Response({'error': str(e)}, status=500)
-
-
-
-from django.utils import timezone
-from datetime import timedelta
-
-@api_view(['POST'])
-@csrf_exempt
-def login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
-    # Check recent failed attempts
-    recent_attempts = LoginAttempt.objects.filter(
-        username=username,
-        attempt_time__gte=timezone.now() - timedelta(hours=1),
-        successful=False
-    ).count()
-    
-    # Calculate lockout time if needed
-    if recent_attempts >= 3:
-        lockout_seconds = 10 ** (recent_attempts - 2)
-        last_attempt = LoginAttempt.objects.filter(
-            username=username,
-            successful=False
-        ).latest('attempt_time')
-        
-        time_passed = timezone.now() - last_attempt.attempt_time
-        if time_passed.total_seconds() < lockout_seconds:
-            return Response({
-                'success': False,
-                'lockout_time': lockout_seconds - time_passed.total_seconds()
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
-
-    # Attempt authentication
-    user = authenticate(username=username, password=password)
-    if user:
-        # Clean up all previous failed attempts for this user
-        LoginAttempt.objects.filter(username=username).delete()
-        
-        # Create new successful login record
-        LoginAttempt.objects.create(username=username, successful=True)
-        token, _ = Token.objects.get_or_create(user=user)
-        return Response({'success': True, 'token': token.key})
-    else:
-        # Failed login
-        LoginAttempt.objects.create(username=username, successful=False)
-        return Response({'success': False}, status=status.HTTP_401_UNAUTHORIZED)
-

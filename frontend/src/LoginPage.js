@@ -13,18 +13,11 @@ const LoginPage = ({ setIsLoggedIn }) => {
         username,
         password,
       });
-
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
         setIsLoggedIn(true);
       }
     } catch (error) {
-      if (error.response?.data?.lockout_time) {
-        const waitSeconds = Math.ceil(error.response.data.lockout_time);
-        alert(`Too many failed attempts. Please wait ${waitSeconds} seconds before trying again.`);
-      } else {
-        alert('Invalid username or password');
-      }
       console.error('Login failed:', error);
     }
   };
@@ -59,13 +52,13 @@ const LoginPage = ({ setIsLoggedIn }) => {
       alignItems: 'center',
     },
     input: {
-      width: '80%',
+      width: '80%', // Adjust the width as necessary
       padding: '12px',
       marginBottom: '15px',
       border: '1px solid #ccc',
       borderRadius: '5px',
       fontSize: '16px',
-      textAlign: 'center',
+      textAlign: 'center', // Center text inside the input
     },
     button: {
       padding: '12px 20px',
@@ -86,7 +79,14 @@ const LoginPage = ({ setIsLoggedIn }) => {
 
   return (
     <div style={styles.container}>
-      <img src={bannerImage} alt="Banner" style={styles.banner} />
+      {/* Banner image (above the login box) */}
+      <img
+        src={bannerImage} // Replace with your actual image URL
+        alt="Banner"
+        style={styles.banner}
+      />
+
+      {/* Login Box */}
       <div style={styles.loginBox}>
         <h1 style={styles.heading}>Login</h1>
         <form onSubmit={handleLogin} style={styles.form}>
