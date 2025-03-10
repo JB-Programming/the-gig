@@ -1,0 +1,13 @@
+schemaVersion: 1.1
+endpoints:
+  - name: backend
+    service:
+      port: 8080
+      basePath: /backend
+    type: REST
+    displayName: backend
+    networkVisibilities:
+      - Public
+      - Project
+      - Organization
+    schemaFilePath: swagger.yaml
