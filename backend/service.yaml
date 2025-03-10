@@ -1,0 +1,12 @@
+apiVersion: choreo.dev/v1beta1
+kind: Service
+metadata:
+  name: django-backend
+spec:
+  type: WebApp
+  port: 8000
+  containers:
+    - image: JB-Programming/the-gig/backend  # Der GitHub-Repo-Pfad
+  ingresses:
+    - hostname: django-backend.choreoapps.dev
+      port: 8000
